@@ -18,6 +18,8 @@ Jadvallar ilova birinchi marta ishga tushganda avtomatik yaratiladi va boshlang'
 | `DATABASE_URL` | Postgres manzili (Vercel'da Neon ulanganda avtomatik qo'shiladi) |
 | `ADMIN_PASSWORD` | Admin panelga kirish paroli |
 | `SESSION_SECRET` | Kamida 32 belgili tasodifiy satr (sessiya cookie imzosi uchun) |
+| `TELEGRAM_BOT_TOKEN` | Ixtiyoriy. @BotFather bergan bot tokeni — yangi arizalar Telegram'ga keladi |
+| `TELEGRAM_CHAT_ID` | Ixtiyoriy. Xabar boradigan chat yoki guruh ID'si (bir nechtasi vergul bilan) |
 
 ## Lokal ishga tushirish
 ```bash

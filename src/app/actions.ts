@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { z } from "zod";
 import { query } from "@/lib/db";
 import { dict, type Lang } from "@/lib/i18n";
+import { notifyNewApplication } from "@/lib/telegram";
 
 export type ApplyState = {
   ok: boolean;
@@ -48,6 +50,8 @@ export async function submitApplication(_prev: ApplyState, formData: FormData): 
     };
   }
   const d = parsed.data;
+  let newId = 0;
+  let serviceName = "";
 
   try {
     const recent = await query<{ n: number }>(
@@ -57,7 +61,6 @@ export async function submitApplication(_prev: ApplyState, formData: FormData): 
     if (recent[0].n > 0) return { ok: false, values: raw, error: t.e_too_fast };
 
     let serviceId: number | null = null;
-    let serviceName = "";
     if (/^\d+$/.test(d.service_id)) {
       const s = await query<{ id: number; name_uz: string }>(
         "SELECT id, name_uz FROM services WHERE id = $1",
@@ -69,15 +72,30 @@ export async function submitApplication(_prev: ApplyState, formData: FormData): 
       }
     }
 
-    await query(
+    const inserted = await query<{ id: number }>(
       `INSERT INTO applications (name, phone, company, service_id, service_name, message, lang)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
       [d.name, d.phone, d.company, serviceId, serviceName, d.message, d.lang],
     );
+    newId = inserted[0].id;
   } catch (e) {
     console.error("submitApplication failed", e);
     return { ok: false, values: raw, error: t.e_generic };
   }
+
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  const proto = h.get("x-forwarded-proto") ?? "https";
+  await notifyNewApplication({
+    id: newId,
+    name: d.name,
+    phone: d.phone,
+    company: d.company,
+    serviceName,
+    message: d.message,
+    lang: d.lang,
+    adminUrl: host ? `${proto}://${host}/admin` : undefined,
+  });
 
   revalidatePath("/admin", "layout");
   return { ok: true };
