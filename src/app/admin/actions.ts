@@ -59,23 +59,18 @@ export async function deleteApplication(id: number) {
   revalidatePath("/admin", "layout");
 }
 
-// ---------- Xizmatlar va narxlar ----------
+// ---------- Xizmatlar ----------
+// Narx ustunlari (price, unit_*) bazada qoladi, lekin saytda ko'rsatilmaydi va admin'da tahrirlanmaydi.
 
 function serviceFromForm(formData: FormData) {
   const str = (k: string, max = 500) => String(formData.get(k) ?? "").trim().slice(0, max);
-  const priceDigits = str("price", 30).replace(/\D/g, "");
   return {
     name_uz: str("name_uz", 200),
     name_ru: str("name_ru", 200),
+    name_en: str("name_en", 200),
     desc_uz: str("desc_uz", 1000),
     desc_ru: str("desc_ru", 1000),
-    name_en: str("name_en", 200),
     desc_en: str("desc_en", 1000),
-    price: priceDigits === "" ? 0 : Number(priceDigits),
-    price_from: formData.get("price_from") === "on",
-    unit_uz: str("unit_uz", 60),
-    unit_ru: str("unit_ru", 60),
-    unit_en: str("unit_en", 60),
     sort: Number(str("sort", 10)) || 0,
     active: formData.get("active") === "on",
   };
@@ -86,21 +81,20 @@ export type ServiceState = { ok?: boolean; error?: string };
 export async function saveService(_prev: ServiceState, formData: FormData): Promise<ServiceState> {
   await requireAdmin();
   const s = serviceFromForm(formData);
-  if (!s.name_uz || !s.name_ru) return { error: "Xizmat nomini ikkala tilda kiriting." };
-  if (!Number.isSafeInteger(s.price)) return { error: "Narx juda katta." };
+  if (!s.name_uz || !s.name_ru) return { error: "Xizmat nomini kamida o'zbek va rus tillarida kiriting." };
 
   const id = String(formData.get("id") ?? "");
-  const params = [s.name_uz, s.name_ru, s.desc_uz, s.desc_ru, s.price, s.price_from, s.unit_uz, s.unit_ru, s.sort, s.active, s.name_en, s.desc_en, s.unit_en];
+  const params = [s.name_uz, s.name_ru, s.name_en, s.desc_uz, s.desc_ru, s.desc_en, s.sort, s.active];
   if (/^\d+$/.test(id)) {
     await query(
-      `UPDATE services SET name_uz=$1, name_ru=$2, desc_uz=$3, desc_ru=$4, price=$5, price_from=$6,
-       unit_uz=$7, unit_ru=$8, sort=$9, active=$10, name_en=$11, desc_en=$12, unit_en=$13 WHERE id=$14`,
+      `UPDATE services SET name_uz=$1, name_ru=$2, name_en=$3, desc_uz=$4, desc_ru=$5, desc_en=$6,
+       sort=$7, active=$8 WHERE id=$9`,
       [...params, Number(id)],
     );
   } else {
     await query(
-      `INSERT INTO services (name_uz, name_ru, desc_uz, desc_ru, price, price_from, unit_uz, unit_ru, sort, active, name_en, desc_en, unit_en)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+      `INSERT INTO services (name_uz, name_ru, name_en, desc_uz, desc_ru, desc_en, sort, active)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
       params,
     );
   }
@@ -111,6 +105,55 @@ export async function saveService(_prev: ServiceState, formData: FormData): Prom
 export async function deleteService(id: number) {
   await requireAdmin();
   await query("DELETE FROM services WHERE id = $1", [id]);
+  refreshAll();
+}
+
+// ---------- Mijozlar ----------
+
+export type ClientsState = { ok?: boolean; added?: number; skipped?: number; error?: string };
+
+/** Bir yo'la ko'p mijoz qo'shish: har qatorda bitta nom (Excel ustunini nusxalab qo'yish mumkin) */
+export async function addClients(_prev: ClientsState, formData: FormData): Promise<ClientsState> {
+  await requireAdmin();
+  const year = Number(String(formData.get("year") ?? "").trim());
+  if (!Number.isInteger(year) || year < 2000 || year > 2100) return { error: "Yilni to'g'ri kiriting, masalan 2026." };
+
+  // Excel'dan nusxalanganda qatorlar tab bilan bo'linishi mumkin — faqat birinchi ustun olinadi
+  const names = String(formData.get("names") ?? "")
+    .split(/\r?\n/)
+    .map((l) => l.split("\t")[0].replace(/\s+/g, " ").trim().slice(0, 200))
+    .filter(Boolean);
+  if (names.length === 0) return { error: "Kamida bitta mijoz nomini kiriting." };
+
+  const existing = await query<{ name: string }>("SELECT name FROM clients WHERE year = $1", [year]);
+  const seen = new Set(existing.map((r) => r.name.toLowerCase()));
+  const sortStart = (await query<{ m: number }>("SELECT COALESCE(MAX(sort), 0)::int AS m FROM clients WHERE year = $1", [year]))[0].m;
+
+  let added = 0;
+  let skipped = 0;
+  for (const name of names) {
+    const key = name.toLowerCase();
+    if (seen.has(key)) {
+      skipped++;
+      continue;
+    }
+    seen.add(key);
+    added++;
+    await query("INSERT INTO clients (name, year, sort) VALUES ($1, $2, $3)", [name, year, sortStart + added * 10]);
+  }
+  refreshAll();
+  return { ok: true, added, skipped };
+}
+
+export async function setClientActive(id: number, active: boolean) {
+  await requireAdmin();
+  await query("UPDATE clients SET active = $1 WHERE id = $2", [active, id]);
+  refreshAll();
+}
+
+export async function deleteClient(id: number) {
+  await requireAdmin();
+  await query("DELETE FROM clients WHERE id = $1", [id]);
   refreshAll();
 }
 

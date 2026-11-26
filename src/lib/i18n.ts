@@ -1,3 +1,5 @@
+import { uzText } from "./uz-alphabet";
+
 export const LANGS = ["uz", "ru", "en"] as const;
 export type Lang = (typeof LANGS)[number];
 
@@ -9,26 +11,28 @@ export function isLang(v: unknown): v is Lang {
 export const LANG_PATH: Record<Lang, string> = { uz: "/", ru: "/ru", en: "/en" };
 
 // Interfeysdagi doimiy yozuvlar (tugmalar, forma maydonlari).
-// Sayt mazmuni (sarlavhalar, matnlar, narxlar) bazada saqlanadi va admin paneldan o'zgaradi.
+// Sayt mazmuni (sarlavhalar, matnlar, xizmatlar) bazada saqlanadi va admin paneldan o'zgaradi.
 export const dict = {
   uz: {
     nav_services: "Xizmatlar",
     nav_about: "Biz haqimizda",
+    nav_team: "Jamoa",
+    nav_clients: "Mijozlar",
+    clients_years: "Yillar",
+    nav_mandatory: "Majburiy audit",
+    nav_voluntary: "Ixtiyoriy audit",
+    nav_tax: "Soliq maslahati",
+    nav_all_services: "Barcha xizmatlar",
+    menu_button: "Menyu",
     nav_process: "Ish tartibi",
     nav_faq: "Savollar",
     nav_contact: "Aloqa",
     cta_apply: "Ariza qoldirish",
     cta_call: "Qo'ng'iroq qilish",
     cta_consult: "Bepul konsultatsiya",
-    cta_services: "Xizmatlar va narxlar",
+    cta_services: "Xizmatlarimiz",
     telegram: "Telegram orqali yozish",
-    col_service: "Xizmat",
-    col_price: "Narx",
-    choose: "Tanlash →",
-    currency: "so'm",
-    from_suffix: "dan",
-    from_prefix: "",
-    price_on_request: "Kelishilgan holda",
+    choose: "Narxini bilish →",
     f_name: "Ismingiz",
     f_phone: "Telefon raqam",
     f_company: "Korxona nomi",
@@ -58,21 +62,23 @@ export const dict = {
   ru: {
     nav_services: "Услуги",
     nav_about: "О нас",
+    nav_team: "Команда",
+    nav_clients: "Клиенты",
+    clients_years: "Годы",
+    nav_mandatory: "Обязательный аудит",
+    nav_voluntary: "Инициативный аудит",
+    nav_tax: "Налоговые консультации",
+    nav_all_services: "Все услуги",
+    menu_button: "Меню",
     nav_process: "Этапы",
     nav_faq: "Вопросы",
     nav_contact: "Контакты",
     cta_apply: "Оставить заявку",
     cta_call: "Позвонить",
     cta_consult: "Бесплатная консультация",
-    cta_services: "Услуги и цены",
+    cta_services: "Наши услуги",
     telegram: "Написать в Telegram",
-    col_service: "Услуга",
-    col_price: "Цена",
-    choose: "Выбрать →",
-    currency: "сум",
-    from_suffix: "",
-    from_prefix: "от",
-    price_on_request: "По договорённости",
+    choose: "Узнать стоимость →",
     f_name: "Ваше имя",
     f_phone: "Телефон",
     f_company: "Название компании",
@@ -102,21 +108,23 @@ export const dict = {
   en: {
     nav_services: "Services",
     nav_about: "About",
+    nav_team: "Team",
+    nav_clients: "Clients",
+    clients_years: "Years",
+    nav_mandatory: "Statutory audit",
+    nav_voluntary: "Voluntary audit",
+    nav_tax: "Tax consulting",
+    nav_all_services: "All services",
+    menu_button: "Menu",
     nav_process: "Process",
     nav_faq: "FAQ",
     nav_contact: "Contact",
     cta_apply: "Leave a request",
     cta_call: "Call us",
     cta_consult: "Free consultation",
-    cta_services: "Services and prices",
+    cta_services: "Our services",
     telegram: "Message us on Telegram",
-    col_service: "Service",
-    col_price: "Price",
-    choose: "Select →",
-    currency: "UZS",
-    from_suffix: "",
-    from_prefix: "from",
-    price_on_request: "By agreement",
+    choose: "Get a quote →",
     f_name: "Your name",
     f_phone: "Phone",
     f_company: "Company name",
@@ -145,26 +153,19 @@ export const dict = {
   },
 } as const;
 
-export type Dict = (typeof dict)[Lang];
+export type Dict = { [K in keyof (typeof dict)["uz"]]: string };
+
+// O'zbekcha yozuvlar yangi alifboda (uz-alphabet.ts dagi sozlamaga qarab)
+const uzDict: Dict = Object.fromEntries(
+  Object.entries(dict.uz).map(([k, v]) => [k, uzText(v, "uz")]),
+) as Dict;
+
+/** Til bo'yicha interfeys yozuvlari (o'zbekchasi yangi alifboda) */
+export function getDict(lang: Lang): Dict {
+  return lang === "uz" ? uzDict : dict[lang];
+}
 
 /** Bazadagi uch tilli yozuvdan kerakli tildagisini oladi; inglizchasi bo'sh bo'lsa o'zbekchasi */
 export function pick<K extends string>(row: Record<`${K}_${Lang}`, string>, field: K, lang: Lang): string {
-  return row[`${field}_${lang}`] || row[`${field}_uz`];
-}
-
-export function formatSum(value: string | number) {
-  const n = typeof value === "string" ? Number(value) : value;
-  return new Intl.NumberFormat("ru-RU").format(n).replace(/ | /g, " ");
-}
-
-export function formatPrice(
-  s: { price: string | number; price_from: boolean; unit_uz: string; unit_ru: string; unit_en: string },
-  lang: Lang,
-) {
-  const t = dict[lang];
-  if (Number(s.price) <= 0) return { amount: t.price_on_request, unit: "" };
-  const sum = `${formatSum(s.price)} ${t.currency}`;
-  const amount = s.price_from ? (t.from_suffix ? `${sum}${t.from_suffix}` : `${t.from_prefix} ${sum}`) : sum;
-  const unit = s[`unit_${lang}`];
-  return { amount, unit };
+  return uzText(row[`${field}_${lang}`] || row[`${field}_uz`], row[`${field}_${lang}`] ? lang : "uz");
 }

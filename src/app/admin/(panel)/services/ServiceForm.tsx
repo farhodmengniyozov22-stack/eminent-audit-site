@@ -2,7 +2,6 @@
 
 import { useActionState, useTransition } from "react";
 import type { Service } from "@/lib/data";
-import { formatSum } from "@/lib/i18n";
 import { deleteService, saveService, type ServiceState } from "../../actions";
 
 const input = "mt-1 block w-full rounded-md border border-ledger bg-sheet px-3 py-2 text-sm focus:border-ink focus:outline-none";
@@ -45,41 +44,12 @@ export function ServiceForm({ service }: { service?: Service }) {
         </label>
       </div>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr_1fr_0.6fr]">
-        <label className="text-sm font-medium">
-          Narx, so&apos;m
-          <input
-            name="price"
-            inputMode="numeric"
-            defaultValue={service ? formatSum(service.price) : ""}
-            placeholder="5 000 000"
-            className={`${input} tnum`}
-          />
-        </label>
-        <label className="text-sm font-medium">
-          Birlik (o&apos;zbekcha)
-          <input name="unit_uz" defaultValue={service?.unit_uz} placeholder="oyiga" className={input} />
-        </label>
-        <label className="text-sm font-medium">
-          Birlik (ruscha)
-          <input name="unit_ru" defaultValue={service?.unit_ru} placeholder="в месяц" className={input} />
-        </label>
-        <label className="text-sm font-medium">
-          Birlik (inglizcha)
-          <input name="unit_en" defaultValue={service?.unit_en} placeholder="per month" className={input} />
-        </label>
-        <label className="text-sm font-medium">
+      <div className="mt-4 flex flex-wrap items-end gap-x-6 gap-y-3">
+        <label className="w-28 text-sm font-medium">
           Tartib
           <input name="sort" type="number" defaultValue={service?.sort ?? 100} className={`${input} tnum`} />
         </label>
-      </div>
-
-      <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3">
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" name="price_from" defaultChecked={service?.price_from ?? true} className="size-4 accent-ink" />
-          &quot;…dan / от … / from …&quot; ko&apos;rinishida
-        </label>
-        <label className="flex items-center gap-2 text-sm">
+        <label className="flex items-center gap-2 pb-2 text-sm">
           <input type="checkbox" name="active" defaultChecked={service?.active ?? true} className="size-4 accent-ink" />
           Saytda ko&apos;rsatish
         </label>

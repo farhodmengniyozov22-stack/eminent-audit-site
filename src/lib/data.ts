@@ -1,6 +1,8 @@
 import "server-only";
+import { CONTENT_FIELDS } from "./content-fields";
 import { query } from "./db";
 import type { Lang } from "./i18n";
+import { uzText } from "./uz-alphabet";
 
 export type Service = {
   id: number;
@@ -37,10 +39,14 @@ export type Application = {
 export const STATUSES = ["new", "in_progress", "done", "rejected"] as const;
 export type Status = (typeof STATUSES)[number];
 
+// Ikkala tilda bir xil maydonlar (telefon, email, Telegram, rasm manzili, raqamlar) alifbo bo'yicha o'girilmaydi
+const SHARED_KEYS = new Set(CONTENT_FIELDS.filter((f) => f.shared).map((f) => f.key));
+
+/** Sayt uchun matnlar; o'zbekchasi yangi alifboda (uz-alphabet.ts dagi sozlamaga qarab) */
 export async function getContent(lang: Lang) {
   const rows = await query<{ key: string; uz: string; ru: string; en: string }>("SELECT key, uz, ru, en FROM content");
   const map: Record<string, string> = {};
-  for (const r of rows) map[r.key] = r[lang];
+  for (const r of rows) map[r.key] = SHARED_KEYS.has(r.key) ? r[lang] : uzText(r[lang], lang);
   return map;
 }
 
@@ -51,6 +57,15 @@ export async function getAllContent() {
 export async function getServices({ activeOnly }: { activeOnly: boolean }) {
   return query<Service>(
     `SELECT * FROM services ${activeOnly ? "WHERE active" : ""} ORDER BY sort, id`,
+  );
+}
+
+export type Client = { id: number; name: string; year: number; sort: number; active: boolean };
+
+/** Mijozlar: yangi yillar birinchi, yil ichida tartib raqami va qo'shilish tartibida */
+export async function getClients({ activeOnly }: { activeOnly: boolean }) {
+  return query<Client>(
+    `SELECT id, name, year, sort, active FROM clients ${activeOnly ? "WHERE active" : ""} ORDER BY year DESC, sort, id`,
   );
 }
 

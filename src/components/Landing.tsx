@@ -1,7 +1,11 @@
+import Image from "next/image";
 import Link from "next/link";
-import { getContent, getServices } from "@/lib/data";
-import { LANG_PATH, LANGS, dict, formatPrice, pick, type Lang } from "@/lib/i18n";
+import { getClients, getContent, getServices } from "@/lib/data";
+import { LANG_PATH, getDict, pick, type Lang } from "@/lib/i18n";
 import { ApplicationForm, PickServiceButton } from "./ApplicationForm";
+import { ClientsTabs } from "./ClientsTabs";
+import { LangSwitcher } from "./LangSwitcher";
+import { DesktopNav, NavMenu, type NavItem } from "./NavMenu";
 
 /** "Aniq raqamlar. *Ishonchli* xulosa." → yulduzchalar orasidagi so'z oltin qiya bo'ladi */
 function Accent({ text }: { text?: string }) {
@@ -48,6 +52,16 @@ function Paragraphs({ text, className }: { text: string; className?: string }) {
   );
 }
 
+/** "Farhod Mengniyozov" → "FM" */
+function initials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join("");
+}
+
 function telegramHref(v?: string) {
   const s = (v ?? "").trim();
   if (!s) return "";
@@ -66,12 +80,44 @@ const ICONS = [
   <path key="g" d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3 12h18M12 3c2.5 2.5 3.8 5.5 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.5-3.8-9S9.5 5.5 12 3z" />,
 ];
 
+// Majburiy audit toifalari uchun ikonkalar (ro'yxat tartibida)
+const MANDATORY_ICONS = [
+  <path key="ajs" d="M3 21h18M5 21V8l7-4 7 4v13M9 21v-6h6v6M9 11h.01M15 11h.01" />,
+  <path key="bank" d="M3 10h18L12 4 3 10zM5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 21h18" />,
+  <path key="ins" d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z" />,
+  <path key="agro" d="M12 21V11M12 11c0-4 3-6 7-6 0 4-3 6-7 6zM12 14c0-3-2.5-5-6-5 0 3 2.5 5 6 5zM7 21h10" />,
+  <path key="fund" d="M4 19V5M4 19h16M8 15l3-4 3 2 5-6" />,
+  <path key="charity" d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" />,
+  <path key="state" d="M5 21V4M5 4h11l-2 4 2 4H5M3 21h6" />,
+  <path key="exch" d="M7 7h12l-3-3M17 17H5l3 3" />,
+  <path key="it" d="M8 9l-3 3 3 3M16 9l3 3-3 3M13.5 6l-3 12" />,
+];
+
+// Ixtiyoriy audit holatlari uchun ikonkalar (ro'yxat tartibida)
+const VOLUNTARY_ICONS = [
+  <path key="owner" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" />,
+  <path key="change" d="M17 3l4 4-4 4M21 7H9M7 21l-4-4 4-4M3 17h12" />,
+  <path key="court" d="M12 3v18M5 7h14M5 7l-3 7a3.5 3.5 0 0 0 6 0L5 7zM19 7l-3 7a3.5 3.5 0 0 0 6 0l-3-7zM8 21h8" />,
+  <path key="invest" d="M3 17l6-6 4 4 8-8M15 7h6v6" />,
+  <path key="deal" d="M4 12l4-4 4 3 4-3 4 4M8 8l-4 4 6 6 2-2M16 8l4 4-6 6" />,
+  <path key="tax" d="M9 14l6-6M9.5 8.5h.01M14.5 13.5h.01M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z" />,
+];
+
 const wrap = "mx-auto max-w-6xl px-5 md:px-8";
 const h2 = "font-serif text-[2.1rem] font-bold leading-[1.1] tracking-tight text-ink md:text-5xl";
 
 export async function Landing({ lang }: { lang: Lang }) {
-  const t = dict[lang];
-  const [c, services] = await Promise.all([getContent(lang), getServices({ activeOnly: true })]);
+  const t = getDict(lang);
+  const [c, services, clients] = await Promise.all([
+    getContent(lang),
+    getServices({ activeOnly: true }),
+    getClients({ activeOnly: true }),
+  ]);
+  // Mijozlar yillar bo'yicha (yangi yil birinchi)
+  const clientGroups = [...new Set(clients.map((cl) => cl.year))].map((year) => ({
+    year,
+    names: clients.filter((cl) => cl.year === year).map((cl) => cl.name),
+  }));
   const phoneHref = `tel:${(c.contact_phone ?? "").replace(/[^\d+]/g, "")}`;
   const tgHref = telegramHref(c.contact_telegram);
   const year = new Date().getFullYear();
@@ -83,6 +129,62 @@ export async function Landing({ lang }: { lang: Lang }) {
     .map((n) => ({ q: c[`faq_${n}_q`], a: c[`faq_${n}_a`] }))
     .filter((f) => f.q && f.a);
   const facts = [c.fact_1, c.fact_2, c.fact_3].filter(Boolean);
+  const lines = (v?: string) =>
+    (v ?? "")
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean);
+  const mandatoryItems = lines(c.mandatory_items);
+  const mandatoryCriteria = lines(c.mandatory_criteria);
+  // "Majburiy audit" xizmati bo'lsa, taklif tugmasi uni formada tanlab qo'yadi
+  const mandatoryService = services.find((s) => /majburiy/i.test(s.name_uz)) ?? services[0];
+  // "Sarlavha | izoh" qatorlari
+  const pairs = (v?: string) =>
+    lines(v).map((l) => {
+      const [title, ...rest] = l.split("|");
+      return { title: title.trim(), text: rest.join("|").trim() };
+    });
+  const voluntaryItems = pairs(c.voluntary_items);
+  const voluntaryService = services.find((s) => /tashabbusli|ixtiyoriy/i.test(s.name_uz));
+  const taxItems = pairs(c.tax_items);
+  const taxService = services.find((s) => /soliq/i.test(s.name_uz));
+  const team = [1, 2, 3, 4]
+    .map((n) => ({
+      name: c[`team_${n}_name`],
+      role: c[`team_${n}_role`],
+      bio: c[`team_${n}_bio`],
+      photo: (c[`team_${n}_photo`] ?? "").trim(),
+      creds: (c[`team_${n}_creds`] ?? "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+    }))
+    .filter((m) => m.name);
+  // Menyu bandlari sahifadagi bo'limlar tartibida; xizmat turlari "Xizmatlar" ostida ochiladi
+  const serviceLinks = [
+    { href: "#xizmatlar", label: t.nav_all_services, show: true },
+    { href: "#majburiy-audit", label: t.nav_mandatory, show: mandatoryItems.length > 0 },
+    { href: "#ixtiyoriy-audit", label: t.nav_voluntary, show: voluntaryItems.length > 0 },
+    { href: "#soliq-maslahati", label: t.nav_tax, show: taxItems.length > 0 },
+  ]
+    .filter((it) => it.show)
+    .map(({ href, label }) => ({ href, label }));
+  const navItems: NavItem[] = [
+    { href: "#haqida", label: t.nav_about, show: true, children: undefined },
+    { href: "#jamoa", label: t.nav_team, show: team.length > 0, children: undefined },
+    { href: "#mijozlar", label: t.nav_clients, show: clientGroups.length > 0, children: undefined },
+    {
+      href: "#xizmatlar",
+      label: t.nav_services,
+      show: true,
+      children: serviceLinks.length > 1 ? serviceLinks : undefined,
+    },
+    { href: "#tartib", label: t.nav_process, show: true },
+    { href: "#savollar", label: t.nav_faq, show: faqs.length > 0 },
+    { href: "#ariza", label: t.nav_contact, show: true },
+  ]
+    .filter((it) => it.show)
+    .map(({ href, label, children }) => ({ href, label, children }));
 
   return (
     <>
@@ -94,35 +196,14 @@ export async function Landing({ lang }: { lang: Lang }) {
       </a>
 
       <header className="sticky top-0 z-40 border-b border-ledger bg-paper/90 backdrop-blur-md">
-        <div className={`${wrap} flex h-[4.5rem] items-center gap-6`}>
+        <div className="mx-auto flex h-[4.5rem] max-w-7xl items-center gap-6 px-5 md:px-8">
           <Link href={LANG_PATH[lang]} className="whitespace-nowrap font-serif text-xl font-bold tracking-tight text-ink sm:text-2xl">
             Eminent <span className="text-accent">Audit</span>
           </Link>
-          <nav
-            aria-label={t.menu}
-            className="mx-auto hidden items-center gap-7 text-[0.95rem] font-medium lg:flex"
-          >
-            <a href="#xizmatlar" className="hover:text-accent">{t.nav_services}</a>
-            <a href="#haqida" className="hover:text-accent">{t.nav_about}</a>
-            <a href="#tartib" className="hover:text-accent">{t.nav_process}</a>
-            {faqs.length > 0 && <a href="#savollar" className="hover:text-accent">{t.nav_faq}</a>}
-            <a href="#ariza" className="hover:text-accent">{t.nav_contact}</a>
-          </nav>
-          <div className="ml-auto flex items-center gap-5 lg:ml-0">
-            <nav aria-label={t.lang_label} className="flex items-center text-[0.8rem] font-semibold tracking-wide">
-              {LANGS.map((l, i) => (
-                <span key={l} className="flex items-center">
-                  {i > 0 && <span className="px-1.5 text-ledger" aria-hidden="true">·</span>}
-                  {l === lang ? (
-                    <span aria-current="page" className="text-accent">{l.toUpperCase()}</span>
-                  ) : (
-                    <Link href={LANG_PATH[l]} hrefLang={l} lang={l} className="text-muted hover:text-ink">
-                      {l.toUpperCase()}
-                    </Link>
-                  )}
-                </span>
-              ))}
-            </nav>
+          <DesktopNav items={navItems} label={t.menu} />
+          <div className="ml-auto flex items-center gap-3 sm:gap-4 xl:ml-0">
+            <LangSwitcher lang={lang} label={t.lang_label} />
+            <NavMenu items={navItems} label={t.menu} menuLabel={t.menu_button} />
             <a href="#ariza" className="btn-gold hidden whitespace-nowrap px-5 py-2.5 text-sm md:inline-flex">
               {t.cta_consult}
             </a>
@@ -196,7 +277,120 @@ export async function Landing({ lang }: { lang: Lang }) {
           </div>
         </section>
 
-        {/* Xizmatlar va narxlar — to'q yashil bo'lim */}
+        {/* Jamoa — birinchi xodim (rahbar) keng to'q kartochkada */}
+        {team.length > 0 && (
+          <section id="jamoa" className={`${wrap} py-20 md:py-28`}>
+            <div className="max-w-2xl">
+              <p className="eyebrow">{t.nav_team}</p>
+              <h2 className={`${h2} mt-4`}>
+                <Accent text={c.team_title} />
+              </h2>
+              {c.team_text && <p className="mt-4 text-lg leading-8 text-muted">{c.team_text}</p>}
+            </div>
+
+            <ul className="mt-14 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+              {team.map((m, i) => {
+                const lead = i === 0;
+                // Rahbar kartochkasida rasm bo'lsa: chapda tik portret, o'ngda matn
+                const portrait = lead && !!m.photo;
+                return (
+                  <li
+                    key={i}
+                    className={`flex flex-col rounded-[1.5rem] border p-7 md:p-8 ${
+                      lead
+                        ? `border-ink bg-ink text-paper md:col-span-2 lg:col-span-3 lg:p-10 ${
+                            portrait
+                              ? "md:grid md:grid-cols-[15rem_minmax(0,1fr)] md:gap-10 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-14"
+                              : "lg:grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.3fr)] lg:gap-12"
+                          }`
+                        : "border-ledger bg-sheet"
+                    }`}
+                  >
+                    {portrait && (
+                      <div className="relative mb-7 aspect-[4/3] overflow-hidden rounded-2xl ring-1 ring-accent/50 md:mb-0 md:aspect-[4/5] md:self-start">
+                        <Image
+                          src={m.photo}
+                          alt={m.name}
+                          fill
+                          sizes="(min-width: 1024px) 18rem, (min-width: 768px) 15rem, 100vw"
+                          unoptimized={!m.photo.startsWith("/")}
+                          className="object-cover object-[50%_22%] md:object-center"
+                        />
+                      </div>
+                    )}
+                    <div className={portrait ? "flex flex-col" : "contents"}>
+                    <div className="flex items-center gap-5">
+                      {!portrait && (
+                        m.photo ? (
+                          <span className="relative size-16 shrink-0 overflow-hidden rounded-full ring-2 ring-accent/40">
+                            <Image src={m.photo} alt="" fill sizes="4rem" unoptimized={!m.photo.startsWith("/")} className="object-cover object-top" />
+                          </span>
+                        ) : (
+                          <span
+                            aria-hidden="true"
+                            className={`grid shrink-0 place-items-center rounded-full font-serif font-semibold italic ${
+                              lead ? "size-20 bg-accent text-3xl text-white" : "size-16 bg-ink text-2xl text-accent"
+                            }`}
+                          >
+                            {initials(m.name)}
+                          </span>
+                        )
+                      )}
+                      <div className="min-w-0">
+                        <h3 className={`font-serif font-bold leading-tight ${lead ? "text-[1.9rem] text-white" : "text-2xl text-ink"}`}>{m.name}</h3>
+                        {m.role && <p className="mt-1.5 text-[0.8rem] font-semibold uppercase tracking-[0.14em] text-accent">{m.role}</p>}
+                      </div>
+                    </div>
+                    <div className={`mt-6 flex flex-1 flex-col ${lead && !portrait ? "lg:mt-0" : ""}`}>
+                      {m.bio && <p className={`flex-1 leading-7 ${lead ? "text-lg text-paper/80" : "text-text/80"}`}>{m.bio}</p>}
+                      {m.creds.length > 0 && (
+                        <ul className="mt-6 flex flex-wrap gap-2">
+                          {m.creds.map((cr, j) => (
+                            <li
+                              key={j}
+                              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[0.8rem] font-semibold ${
+                                lead ? "bg-white/10 text-paper" : "bg-accent/10 text-accent-dark"
+                              }`}
+                            >
+                              {j === 0 && (
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                  <circle cx="12" cy="9" r="6" />
+                                  <path d="M8.5 13.9 7 22l5-3 5 3-1.5-8.1" />
+                                </svg>
+                              )}
+                              {cr}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
+
+        {/* Mijozlar — yillar bo'yicha (ro'yxat admin paneldan to'ldiriladi; bo'sh bo'lsa bo'lim ko'rinmaydi) */}
+        {clientGroups.length > 0 && (
+          <section id="mijozlar" className="border-t border-ledger">
+            <div className={`${wrap} py-20 md:py-28`}>
+              <div className="grid gap-6 md:grid-cols-[1fr_1fr] md:items-end md:gap-16">
+                <div>
+                  <p className="eyebrow">{t.nav_clients}</p>
+                  <h2 className={`${h2} mt-4`}>
+                    <Accent text={c.clients_title} />
+                  </h2>
+                </div>
+                {c.clients_text && <p className="text-lg leading-8 text-text/80">{c.clients_text}</p>}
+              </div>
+              <ClientsTabs groups={clientGroups} yearLabel={t.clients_years} />
+            </div>
+          </section>
+        )}
+
+        {/* Xizmatlar — to'q yashil bo'lim (narxlar saytda ko'rsatilmaydi) */}
         <section id="xizmatlar" className="bg-ink text-paper">
           <div className={`${wrap} py-20 md:py-28`}>
             <div className="mx-auto max-w-2xl text-center">
@@ -209,7 +403,6 @@ export async function Landing({ lang }: { lang: Lang }) {
 
             <ul className="mt-14 flex flex-wrap justify-center gap-5">
               {services.map((s, i) => {
-                const p = formatPrice(s, lang);
                 const name = pick(s, "name", lang);
                 const desc = pick(s, "desc", lang);
                 const featured = i === 0;
@@ -230,15 +423,11 @@ export async function Landing({ lang }: { lang: Lang }) {
                     </span>
                     <h3 className="text-lg font-semibold text-white">{name}</h3>
                     {desc && <p className={`mt-2 flex-1 text-[0.95rem] leading-6 ${featured ? "text-white/85" : "text-paper/62"}`}>{desc}</p>}
-                    <div className={`mt-6 flex items-end justify-between gap-3 border-t pt-5 ${featured ? "border-white/25" : "border-white/12"}`}>
-                      <p>
-                        <span className="tnum block font-serif text-[1.4rem] font-semibold leading-tight text-white">{p.amount}</span>
-                        {p.unit && <span className={`text-sm ${featured ? "text-white/80" : "text-paper/60"}`}>/ {p.unit}</span>}
-                      </p>
+                    <div className={`mt-6 border-t pt-5 ${featured ? "border-white/25" : "border-white/12"}`}>
                       <PickServiceButton
                         id={s.id}
                         label={t.choose}
-                        className={`shrink-0 text-sm font-semibold hover:underline ${featured ? "text-white" : "text-accent"}`}
+                        className={`text-[0.95rem] font-semibold hover:underline ${featured ? "text-white" : "text-accent"}`}
                       />
                     </div>
                   </li>
@@ -248,6 +437,173 @@ export async function Landing({ lang }: { lang: Lang }) {
             {c.services_note && <p className="mx-auto mt-10 max-w-[70ch] text-center text-[0.95rem] text-paper/60">{c.services_note}</p>}
           </div>
         </section>
+
+        {/* Majburiy audit — qonun bo'yicha kimlar o'tishi shart */}
+        {mandatoryItems.length > 0 && (
+          <section id="majburiy-audit" className="bg-sand">
+            <div className={`${wrap} py-20 md:py-28`}>
+              <div className="grid gap-6 md:grid-cols-[1fr_1fr] md:items-end md:gap-16">
+                <div>
+                  <p className="eyebrow">{t.nav_mandatory}</p>
+                  <h2 className={`${h2} mt-4`}>
+                    <Accent text={c.mandatory_title} />
+                  </h2>
+                </div>
+                {c.mandatory_text && <p className="text-lg leading-8 text-text/80">{c.mandatory_text}</p>}
+              </div>
+
+              <ol className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {mandatoryItems.map((item, i) => (
+                  <li key={i} className="flex items-center gap-4 rounded-2xl border border-ledger bg-sheet p-4 sm:flex-col sm:items-stretch sm:p-6">
+                    <div className="flex shrink-0 items-center justify-between">
+                      <span className="grid size-11 place-items-center rounded-xl bg-ink text-accent" aria-hidden="true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          {MANDATORY_ICONS[i % MANDATORY_ICONS.length]}
+                        </svg>
+                      </span>
+                      <span className="tnum hidden font-serif text-2xl font-medium italic text-ledger sm:inline" aria-hidden="true">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                    </div>
+                    <p className="font-semibold leading-snug text-ink">{item}</p>
+                  </li>
+                ))}
+              </ol>
+
+              {mandatoryCriteria.length > 0 && (
+                <div className="mt-5 rounded-[1.5rem] bg-ink p-7 text-paper md:p-10">
+                  <div className="flex flex-col gap-5 md:flex-row md:items-start md:gap-8">
+                    <span className="grid size-16 shrink-0 place-items-center rounded-full border-[1.5px] border-accent font-serif text-xl font-semibold italic text-accent" aria-hidden="true">
+                      2/{mandatoryCriteria.length}
+                    </span>
+                    <p className="text-lg leading-8 text-paper/85 [&_em]:font-semibold [&_em]:not-italic">
+                      <Accent text={c.mandatory_criteria_title} />
+                    </p>
+                  </div>
+                  <ul className="mt-8 grid gap-4 md:grid-cols-3">
+                    {mandatoryCriteria.map((cr, i) => (
+                      <li key={i} className="flex gap-3 rounded-2xl border border-white/12 bg-white/[0.04] p-5 leading-6 text-paper/90">
+                        <svg className="mt-0.5 shrink-0 text-accent" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="M5 12l5 5 9-10" />
+                        </svg>
+                        {cr}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {(c.mandatory_cta_title || c.mandatory_cta_text) && (
+                <div className="mt-5 flex flex-col gap-5 rounded-[1.5rem] border-[1.5px] border-accent/40 bg-sheet p-7 md:flex-row md:items-center md:justify-between md:p-8">
+                  <div>
+                    {c.mandatory_cta_title && <p className="font-serif text-2xl font-bold text-ink">{c.mandatory_cta_title}</p>}
+                    {c.mandatory_cta_text && <p className="mt-1.5 max-w-[60ch] leading-7 text-muted">{c.mandatory_cta_text}</p>}
+                  </div>
+                  {mandatoryService ? (
+                    <PickServiceButton id={mandatoryService.id} label={t.cta_consult} className="btn-gold shrink-0 px-7 py-3.5 text-base" />
+                  ) : (
+                    <a href="#ariza" className="btn-gold shrink-0 px-7 py-3.5 text-base">
+                      {t.cta_consult}
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* Ixtiyoriy audit — kimlar uchun foydali */}
+        {voluntaryItems.length > 0 && (
+          <section id="ixtiyoriy-audit" className={`${wrap} py-20 md:py-28`}>
+            <div className="grid gap-6 md:grid-cols-[1fr_1fr] md:items-end md:gap-16">
+              <div>
+                <p className="eyebrow">{t.nav_voluntary}</p>
+                <h2 className={`${h2} mt-4`}>
+                  <Accent text={c.voluntary_title} />
+                </h2>
+              </div>
+              {c.voluntary_text && <p className="text-lg leading-8 text-text/80">{c.voluntary_text}</p>}
+            </div>
+
+            <ul className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+              {voluntaryItems.map((it, i) => (
+                <li
+                  key={i}
+                  className="group rounded-[1.25rem] border border-ledger bg-sheet p-7 transition-[transform,border-color] duration-200 hover:-translate-y-1 hover:border-accent/50"
+                >
+                  <span
+                    className="grid size-12 place-items-center rounded-full border-[1.5px] border-accent text-accent transition-colors group-hover:bg-accent group-hover:text-white"
+                    aria-hidden="true"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      {VOLUNTARY_ICONS[i % VOLUNTARY_ICONS.length]}
+                    </svg>
+                  </span>
+                  <h3 className="mt-5 font-serif text-xl font-bold leading-snug text-ink">{it.title}</h3>
+                  {it.text && <p className="mt-2 leading-7 text-muted">{it.text}</p>}
+                </li>
+              ))}
+            </ul>
+
+            {(c.voluntary_cta_title || c.voluntary_cta_text) && (
+              <div className="mt-5 flex flex-col gap-5 rounded-[1.5rem] bg-ink p-7 text-paper md:flex-row md:items-center md:justify-between md:p-8">
+                <div>
+                  {c.voluntary_cta_title && <p className="font-serif text-2xl font-bold text-white">{c.voluntary_cta_title}</p>}
+                  {c.voluntary_cta_text && <p className="mt-1.5 max-w-[62ch] leading-7 text-paper/75">{c.voluntary_cta_text}</p>}
+                </div>
+                {voluntaryService ? (
+                  <PickServiceButton id={voluntaryService.id} label={t.cta_consult} className="btn-gold shrink-0 px-7 py-3.5 text-base" />
+                ) : (
+                  <a href="#ariza" className="btn-gold shrink-0 px-7 py-3.5 text-base">
+                    {t.cta_consult}
+                  </a>
+                )}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* Soliq maslahati — chapda sarlavha va taklif, o'ngda raqamlangan ro'yxat */}
+        {taxItems.length > 0 && (
+          <section id="soliq-maslahati" className="bg-sand">
+            <div className={`${wrap} grid gap-12 py-20 md:py-28 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-16`}>
+              <div className="lg:sticky lg:top-28 lg:self-start">
+                <p className="eyebrow">{t.nav_tax}</p>
+                <h2 className={`${h2} mt-4`}>
+                  <Accent text={c.tax_title} />
+                </h2>
+                {c.tax_text && <p className="mt-5 text-lg leading-8 text-text/80">{c.tax_text}</p>}
+                {(c.tax_cta_title || c.tax_cta_text) && (
+                  <div className="mt-8 rounded-[1.5rem] bg-ink p-7 text-paper">
+                    {c.tax_cta_title && <p className="font-serif text-2xl font-bold text-white">{c.tax_cta_title}</p>}
+                    {c.tax_cta_text && <p className="mt-2 leading-7 text-paper/75">{c.tax_cta_text}</p>}
+                    {taxService ? (
+                      <PickServiceButton id={taxService.id} label={t.cta_consult} className="btn-gold mt-6 px-7 py-3.5 text-base" />
+                    ) : (
+                      <a href="#ariza" className="btn-gold mt-6 px-7 py-3.5 text-base">
+                        {t.cta_consult}
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <ol className="divide-y divide-ledger rounded-[1.5rem] border border-ledger bg-sheet">
+                {taxItems.map((it, i) => (
+                  <li key={i} className="flex gap-5 p-6 md:gap-7 md:p-8">
+                    <span className="tnum w-10 shrink-0 font-serif text-3xl font-medium italic leading-none text-accent" aria-hidden="true">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <div>
+                      <h3 className="text-lg font-semibold leading-snug text-ink">{it.title}</h3>
+                      {it.text && <p className="mt-1.5 leading-7 text-muted">{it.text}</p>}
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </section>
+        )}
 
         {/* Ish tartibi */}
         <section id="tartib" className={`${wrap} py-20 md:py-28`}>
@@ -311,12 +667,18 @@ export async function Landing({ lang }: { lang: Lang }) {
                   <dt className="text-xs uppercase tracking-[0.18em] text-paper/55">{t.email}</dt>
                   <dd className="mt-1"><a href={`mailto:${c.contact_email}`} className="text-lg font-semibold hover:text-accent">{c.contact_email}</a></dd>
                 </div>
-                <div>
-                  <dt className="text-xs uppercase tracking-[0.18em] text-paper/55">{t.address} · {t.hours}</dt>
-                  <dd className="mt-1 text-lg font-semibold">
-                    {c.contact_address} · {c.contact_hours}
-                  </dd>
-                </div>
+                {c.contact_address && (
+                  <div>
+                    <dt className="text-xs uppercase tracking-[0.18em] text-paper/55">{t.address}</dt>
+                    <dd className="mt-1 text-lg font-semibold">{c.contact_address}</dd>
+                  </div>
+                )}
+                {c.contact_hours && (
+                  <div>
+                    <dt className="text-xs uppercase tracking-[0.18em] text-paper/55">{t.hours}</dt>
+                    <dd className="mt-1 text-lg font-semibold">{c.contact_hours}</dd>
+                  </div>
+                )}
               </dl>
               {tgHref && (
                 <a

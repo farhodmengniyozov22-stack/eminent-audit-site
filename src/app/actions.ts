@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { query } from "@/lib/db";
-import { dict, isLang, type Lang } from "@/lib/i18n";
+import { getDict, isLang, type Lang } from "@/lib/i18n";
 import { notifyNewApplication } from "@/lib/telegram";
 
 export type ApplyState = {
@@ -32,7 +32,7 @@ export async function submitApplication(_prev: ApplyState, formData: FormData): 
     ["name", "phone", "company", "service_id", "message", "lang"].map((k) => [k, String(formData.get(k) ?? "")]),
   );
   const lang: Lang = isLang(raw.lang) ? raw.lang : "uz";
-  const t = dict[lang];
+  const t = getDict(lang);
 
   // Bot tuzog'i: odamlar bu yashirin maydonni to'ldirmaydi
   if (String(formData.get("website") ?? "") !== "") return { ok: true };

@@ -5,10 +5,11 @@ export default async function ServicesPage() {
   const services = await getServices({ activeOnly: false });
   return (
     <>
-      <h1 className="font-serif text-3xl font-semibold text-ink">Xizmatlar va narxlar</h1>
+      <h1 className="font-serif text-3xl font-semibold text-ink">Xizmatlar</h1>
       <p className="mt-2 max-w-[70ch] text-muted">
-        Narx so&apos;mda, faqat raqam bilan kiritiladi. 0 qo&apos;yilsa, saytda &quot;Kelishilgan holda&quot; deb
-        chiqadi. Tartib raqami kichik bo&apos;lgan xizmat yuqorida turadi.
+        Narxlar saytda ko&apos;rsatilmaydi — mijoz &quot;Narxini bilish&quot; tugmasi orqali ariza qoldiradi. Tartib raqami
+        kichik bo&apos;lgan xizmat yuqorida turadi. Xizmatni o&apos;chirmasdan yashirish uchun &quot;Saytda ko&apos;rsatish&quot; belgisini
+        olib tashlang.
       </p>
 
       <div className="mt-8 space-y-4">

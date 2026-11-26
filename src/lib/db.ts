@@ -1,6 +1,7 @@
 import "server-only";
 import { Pool, type QueryResultRow } from "pg";
 import { CONTENT_FIELDS } from "./content-fields";
+import { runMigrations } from "./migrations";
 
 declare global {
   var __eaPool: Pool | undefined;
@@ -71,6 +72,21 @@ ALTER TABLE content ADD COLUMN IF NOT EXISTS en TEXT NOT NULL DEFAULT '';
 ALTER TABLE services ADD COLUMN IF NOT EXISTS name_en TEXT NOT NULL DEFAULT '';
 ALTER TABLE services ADD COLUMN IF NOT EXISTS desc_en TEXT NOT NULL DEFAULT '';
 ALTER TABLE services ADD COLUMN IF NOT EXISTS unit_en TEXT NOT NULL DEFAULT '';
+-- Mijozlar (yillar bo'yicha)
+CREATE TABLE IF NOT EXISTS clients (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  year INT NOT NULL,
+  sort INT NOT NULL DEFAULT 100,
+  active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS clients_year_idx ON clients (year DESC, sort, id);
+-- Bir martalik ma'lumot yangilanishlari (migrations.ts)
+CREATE TABLE IF NOT EXISTS migrations (
+  id TEXT PRIMARY KEY,
+  applied_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 `;
 
 // [name_uz, name_ru, desc_uz, desc_ru, price, price_from, unit_uz, unit_ru, name_en, desc_en, unit_en]
@@ -79,9 +95,7 @@ const SEED_SERVICES = [
   ["Tashabbusli audit", "Инициативный аудит", "Rahbariyat yoki ta'sischilar buyurtmasi bo'yicha alohida yo'nalish yoki davr tekshiruvi.", "Проверка отдельного участка или периода по заказу руководства или учредителей.", 8000000, true, "", "", "Voluntary audit", "Review of a specific area or period commissioned by management or shareholders.", ""],
   ["Buxgalteriya hisobini yuritish", "Ведение бухгалтерского учёта", "Birlamchi hujjatlardan tortib soliq hisobotlarigacha — to'liq autsorsing.", "Полный аутсорсинг: от первичных документов до налоговой отчётности.", 3000000, true, "oyiga", "в месяц", "Bookkeeping", "Full outsourcing: from source documents to tax returns.", "per month"],
   ["Buxgalteriya hisobini qayta tiklash", "Восстановление бухгалтерского учёта", "O'tgan davrlar hisobini tiklash, qoldiqlarni solishtirish va tuzatish.", "Восстановление учёта за прошлые периоды, сверка и корректировка остатков.", 5000000, true, "", "", "Restoration of accounting records", "Restoring records for past periods, reconciling and correcting balances.", ""],
-  ["QQS qaytarishda ko'mak", "Сопровождение возврата НДС", "Hujjatlar paketini tayyorlash va soliq organi bilan muloqotda hamrohlik.", "Подготовка пакета документов и сопровождение при взаимодействии с налоговым органом.", 6000000, true, "", "", "VAT refund support", "Preparing the document package and supporting you in dealings with the tax authority.", ""],
   ["Soliq maslahati", "Налоговая консультация", "Soliq xatarlarini baholash, operatsiyalarni qonuniy rejalashtirish.", "Оценка налоговых рисков, законное планирование операций.", 500000, false, "bir soat", "за час", "Tax consulting", "Assessing tax risks and planning transactions lawfully.", "per hour"],
-  ["XBXS bo'yicha hisobot", "Отчётность по МСФО", "Milliy hisobotni XBXS formatiga transformatsiya qilish.", "Трансформация национальной отчётности в формат МСФО.", 20000000, true, "", "", "IFRS reporting", "Converting national financial statements to IFRS format.", ""],
 ] as const;
 
 // Avvalgi nomlar: admin nomini o'zgartirgan bo'lsa ham inglizchasini topish uchun
@@ -132,6 +146,7 @@ async function initSchema() {
         );
       }
     }
+    await runMigrations(client);
     await client.query("COMMIT");
   } catch (e) {
     await client.query("ROLLBACK").catch(() => {});

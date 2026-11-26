@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
+import { uzText } from "@/lib/uz-alphabet";
 import "../globals.css";
 
 export const metadata: Metadata = {
-  title: "Eminent Audit — audit, buxgalteriya va soliq maslahati",
-  description:
-    "Majburiy va tashabbusli audit, buxgalteriya hisobini yuritish va tiklash, soliq maslahati va XBXS bo'yicha hisobot. Toshkent.",
+  title: uzText("Eminent Audit — audit, buxgalteriya va soliq maslahati", "uz"),
+  description: uzText(
+    "Majburiy va tashabbusli audit, buxgalteriya hisobini yuritish va qayta tiklash, soliq maslahati. Toshkent.",
+    "uz",
+  ),
   alternates: { languages: { uz: "/", ru: "/ru", en: "/en" } },
 };
 
