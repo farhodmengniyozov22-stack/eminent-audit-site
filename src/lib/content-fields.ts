@@ -532,9 +532,9 @@ export const CONTENT_FIELDS: ContentField[] = [
     label: "2-javob",
     group: "Savollar (FAQ)",
     multiline: true,
-    uz: "Korxona hajmiga qarab odatda 2–4 hafta. Muddat shartnomada qat'iy belgilanadi.",
-    ru: "Обычно 2–4 недели в зависимости от масштаба компании. Срок фиксируется в договоре.",
-    en: "Usually 2–4 weeks, depending on the size of the company. The timeline is fixed in the contract.",
+    uz: "Korxona hajmiga qarab odatda 1–4 hafta. Muddat shartnomada qat'iy belgilanadi.",
+    ru: "Обычно 1–4 недели в зависимости от масштаба компании. Срок фиксируется в договоре.",
+    en: "Usually 1–4 weeks, depending on the size of the company. The timeline is fixed in the contract.",
   },
   { key: "faq_3_q", label: "3-savol", group: "Savollar (FAQ)", uz: "Qanday hujjatlar kerak bo'ladi?", ru: "Какие документы понадобятся?", en: "What documents will you need?" },
   {
