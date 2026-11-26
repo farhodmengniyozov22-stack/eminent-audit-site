@@ -51,20 +51,21 @@ body {
 
 /* Utilitalar (hidden, md:… va h.k.) bularni bosib keta olishi uchun components qatlamida */
 @layer components {
-  /* Bo'lim yorlig'i (eyebrow): to'q kofe rangli nishon, oltin yozuv — yashil sarlavhalardan ajralib turadi */
+  /* Bo'lim yorlig'i (eyebrow): "sutli kofe" (karamel) nishon, to'q kofe yozuv —
+     fondan ajralib turadi, lekin og'ir ko'rinmaydi */
   .eyebrow {
     display: inline-flex;
     align-items: center;
     padding: 0.55em 1.15em;
     border-radius: 9999px;
-    background: #5a3a1f;
-    box-shadow: 0 6px 16px -8px rgba(90, 58, 31, 0.6);
+    background: #d2b07c;
+    box-shadow: 0 4px 12px -8px rgba(90, 58, 31, 0.45);
     font-size: 0.9rem;
     font-weight: 700;
     letter-spacing: 0.14em;
     line-height: 1.2;
     text-transform: uppercase;
-    color: #e8c47c;
+    color: #3e2711;
   }
   /* To'q yashil bo'limlarda teskarisi: oltin nishon, to'q yashil yozuv */
   .bg-ink .eyebrow {
