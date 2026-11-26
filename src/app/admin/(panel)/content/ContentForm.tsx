@@ -6,7 +6,7 @@ import { saveContent, type ContentState } from "../../actions";
 
 const input = "mt-1 block w-full rounded-md border border-ledger bg-sheet px-3 py-2 text-sm focus:border-ink focus:outline-none";
 
-export function ContentForm({ values }: { values: Record<string, { uz: string; ru: string }> }) {
+export function ContentForm({ values }: { values: Record<string, { uz: string; ru: string; en: string }> }) {
   const [state, action, pending] = useActionState<ContentState, FormData>(saveContent, {});
   const groups = [...new Set(CONTENT_FIELDS.map((f) => f.group))];
 
@@ -17,7 +17,7 @@ export function ContentForm({ values }: { values: Record<string, { uz: string; r
           <legend className="px-2 font-serif text-xl font-semibold text-ink">{g}</legend>
           <div className="space-y-5">
             {CONTENT_FIELDS.filter((f) => f.group === g).map((f) => {
-              const v = values[f.key] ?? { uz: f.uz, ru: f.ru };
+              const v = values[f.key] ?? { uz: f.uz, ru: f.ru, en: f.en };
               const Field = f.multiline ? "textarea" : "input";
               const extra = f.multiline ? { rows: 3 } : {};
               if (f.shared) {
@@ -31,7 +31,7 @@ export function ContentForm({ values }: { values: Record<string, { uz: string; r
               return (
                 <div key={f.key}>
                   <p className="text-sm font-medium">{f.label}</p>
-                  <div className="grid gap-3 md:grid-cols-2">
+                  <div className="grid gap-3 md:grid-cols-3">
                     <label className="text-xs text-muted">
                       O&apos;zbekcha
                       <Field name={`${f.key}__uz`} defaultValue={v.uz} className={input} {...extra} />
@@ -39,6 +39,10 @@ export function ContentForm({ values }: { values: Record<string, { uz: string; r
                     <label className="text-xs text-muted">
                       Ruscha
                       <Field name={`${f.key}__ru`} defaultValue={v.ru} className={input} {...extra} />
+                    </label>
+                    <label className="text-xs text-muted">
+                      Inglizcha
+                      <Field name={`${f.key}__en`} defaultValue={v.en} className={input} {...extra} />
                     </label>
                   </div>
                 </div>

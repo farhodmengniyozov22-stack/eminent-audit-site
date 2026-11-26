@@ -18,7 +18,7 @@ export function ServiceForm({ service }: { service?: Service }) {
       className={`rounded-lg border bg-sheet p-5 ${service && !service.active ? "border-dashed border-ledger opacity-75" : "border-ledger"}`}
     >
       {service && <input type="hidden" name="id" value={service.id} />}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-3">
         <label className="text-sm font-medium">
           Nomi (o&apos;zbekcha)
           <input name="name_uz" required defaultValue={service?.name_uz} className={input} />
@@ -28,6 +28,10 @@ export function ServiceForm({ service }: { service?: Service }) {
           <input name="name_ru" required defaultValue={service?.name_ru} className={input} />
         </label>
         <label className="text-sm font-medium">
+          Nomi (inglizcha)
+          <input name="name_en" defaultValue={service?.name_en} className={input} />
+        </label>
+        <label className="text-sm font-medium">
           Tavsif (o&apos;zbekcha)
           <textarea name="desc_uz" rows={2} defaultValue={service?.desc_uz} className={input} />
         </label>
@@ -35,9 +39,13 @@ export function ServiceForm({ service }: { service?: Service }) {
           Tavsif (ruscha)
           <textarea name="desc_ru" rows={2} defaultValue={service?.desc_ru} className={input} />
         </label>
+        <label className="text-sm font-medium">
+          Tavsif (inglizcha)
+          <textarea name="desc_en" rows={2} defaultValue={service?.desc_en} className={input} />
+        </label>
       </div>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr_0.6fr]">
+      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr_1fr_0.6fr]">
         <label className="text-sm font-medium">
           Narx, so&apos;m
           <input
@@ -57,6 +65,10 @@ export function ServiceForm({ service }: { service?: Service }) {
           <input name="unit_ru" defaultValue={service?.unit_ru} placeholder="в месяц" className={input} />
         </label>
         <label className="text-sm font-medium">
+          Birlik (inglizcha)
+          <input name="unit_en" defaultValue={service?.unit_en} placeholder="per month" className={input} />
+        </label>
+        <label className="text-sm font-medium">
           Tartib
           <input name="sort" type="number" defaultValue={service?.sort ?? 100} className={`${input} tnum`} />
         </label>
@@ -65,7 +77,7 @@ export function ServiceForm({ service }: { service?: Service }) {
       <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3">
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" name="price_from" defaultChecked={service?.price_from ?? true} className="size-4 accent-ink" />
-          &quot;…dan / от …&quot; ko&apos;rinishida
+          &quot;…dan / от … / from …&quot; ko&apos;rinishida
         </label>
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" name="active" defaultChecked={service?.active ?? true} className="size-4 accent-ink" />

@@ -8,10 +8,13 @@ export type Service = {
   name_ru: string;
   desc_uz: string;
   desc_ru: string;
+  name_en: string;
+  desc_en: string;
   price: string; // BIGINT → string
   price_from: boolean;
   unit_uz: string;
   unit_ru: string;
+  unit_en: string;
   sort: number;
   active: boolean;
 };
@@ -35,14 +38,14 @@ export const STATUSES = ["new", "in_progress", "done", "rejected"] as const;
 export type Status = (typeof STATUSES)[number];
 
 export async function getContent(lang: Lang) {
-  const rows = await query<{ key: string; uz: string; ru: string }>("SELECT key, uz, ru FROM content");
+  const rows = await query<{ key: string; uz: string; ru: string; en: string }>("SELECT key, uz, ru, en FROM content");
   const map: Record<string, string> = {};
   for (const r of rows) map[r.key] = r[lang];
   return map;
 }
 
 export async function getAllContent() {
-  return query<{ key: string; uz: string; ru: string }>("SELECT key, uz, ru FROM content");
+  return query<{ key: string; uz: string; ru: string; en: string }>("SELECT key, uz, ru, en FROM content");
 }
 
 export async function getServices({ activeOnly }: { activeOnly: boolean }) {

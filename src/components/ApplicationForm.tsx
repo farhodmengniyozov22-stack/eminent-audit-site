@@ -7,7 +7,7 @@ import type { Dict, Lang } from "@/lib/i18n";
 type ServiceOption = { id: number; name: string };
 
 const fieldCls =
-  "mt-1.5 block w-full rounded-md border border-ledger bg-sheet px-3.5 py-2.5 text-base text-text placeholder:text-muted/70 focus:border-ink focus:outline-none focus-visible:outline-2 focus-visible:outline-stamp";
+  "mt-1.5 block w-full rounded-xl border-[1.5px] border-ledger bg-paper px-4 py-3 text-base text-text placeholder:text-muted/70 focus:border-accent focus:outline-none";
 
 export function ApplicationForm(props: { lang: Lang; t: Dict; services: ServiceOption[] }) {
   const [round, setRound] = useState(0);
@@ -55,13 +55,13 @@ function FormInner({
 
   if (state.ok) {
     return (
-      <div role="status" className="rounded-lg border border-ledger bg-sheet p-8">
+      <div role="status" className="self-start rounded-[1.4rem] bg-sheet p-8 text-text md:p-10">
         <p className="font-serif text-2xl font-semibold text-ink">{t.f_success_title}</p>
         <p className="mt-2 text-muted">{t.f_success_text}</p>
         <button
           type="button"
           onClick={onReset}
-          className="mt-6 text-sm font-medium text-ink underline underline-offset-4"
+          className="mt-6 text-sm font-semibold text-accent underline underline-offset-4"
         >
           {t.f_again}
         </button>
@@ -70,7 +70,7 @@ function FormInner({
   }
 
   return (
-    <form action={action} noValidate className="rounded-lg border border-ledger bg-sheet p-6 md:p-8">
+    <form action={action} noValidate className="relative rounded-[1.4rem] bg-sheet p-6 text-text md:p-8">
       <input type="hidden" name="lang" value={lang} />
       {/* bot tuzog'i */}
       <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
@@ -82,7 +82,7 @@ function FormInner({
 
       <div className="grid gap-5 sm:grid-cols-2">
         <div>
-          <label htmlFor="f-name" className="text-sm font-medium">
+          <label htmlFor="f-name" className="text-sm font-semibold text-ink">
             {t.f_name}
           </label>
           <input
@@ -102,7 +102,7 @@ function FormInner({
           )}
         </div>
         <div>
-          <label htmlFor="f-phone" className="text-sm font-medium">
+          <label htmlFor="f-phone" className="text-sm font-semibold text-ink">
             {t.f_phone}
           </label>
           <input
@@ -125,13 +125,13 @@ function FormInner({
           )}
         </div>
         <div>
-          <label htmlFor="f-company" className="text-sm font-medium">
+          <label htmlFor="f-company" className="text-sm font-semibold text-ink">
             {t.f_company} <span className="font-normal text-muted">({t.f_optional})</span>
           </label>
           <input id="f-company" name="company" autoComplete="organization" defaultValue={v.company} className={fieldCls} />
         </div>
         <div>
-          <label htmlFor="f-service" className="text-sm font-medium">
+          <label htmlFor="f-service" className="text-sm font-semibold text-ink">
             {t.f_service}
           </label>
           <select
@@ -150,7 +150,7 @@ function FormInner({
           </select>
         </div>
         <div className="sm:col-span-2">
-          <label htmlFor="f-message" className="text-sm font-medium">
+          <label htmlFor="f-message" className="text-sm font-semibold text-ink">
             {t.f_message} <span className="font-normal text-muted">({t.f_optional})</span>
           </label>
           <textarea
@@ -165,7 +165,7 @@ function FormInner({
       </div>
 
       {state.error && (
-        <p role="alert" className="mt-5 rounded-md bg-bad/8 px-4 py-3 text-sm text-bad">
+        <p role="alert" className="mt-5 rounded-xl bg-bad/8 px-4 py-3 text-sm text-bad">
           {state.error}
         </p>
       )}
@@ -173,7 +173,7 @@ function FormInner({
       <button
         type="submit"
         disabled={pending}
-        className="mt-6 inline-flex w-full items-center justify-center rounded-md bg-ink px-6 py-3.5 text-base font-semibold text-white transition-colors hover:bg-ink-soft disabled:opacity-60 sm:w-auto"
+        className="btn-gold mt-6 w-full px-6 py-4 text-base"
       >
         {pending ? t.f_sending : t.f_submit}
       </button>
@@ -181,12 +181,12 @@ function FormInner({
   );
 }
 
-export function PickServiceButton({ id, label }: { id: number; label: string }) {
+export function PickServiceButton({ id, label, className }: { id: number; label: string; className?: string }) {
   return (
     <a
       href="#ariza"
       onClick={() => window.dispatchEvent(new CustomEvent("ea:pick-service", { detail: id }))}
-      className="text-sm font-medium text-ink underline decoration-ledger decoration-2 underline-offset-4 hover:decoration-ink"
+      className={className ?? "text-sm font-medium text-ink underline decoration-ledger decoration-2 underline-offset-4 hover:decoration-ink"}
     >
       {label}
     </a>

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { query } from "@/lib/db";
-import { dict, type Lang } from "@/lib/i18n";
+import { dict, isLang, type Lang } from "@/lib/i18n";
 import { notifyNewApplication } from "@/lib/telegram";
 
 export type ApplyState = {
@@ -24,14 +24,14 @@ const schema = z.object({
   company: z.string().trim().max(200).default(""),
   service_id: z.string().trim().default(""),
   message: z.string().trim().max(2000).default(""),
-  lang: z.enum(["uz", "ru"]).default("uz"),
+  lang: z.enum(["uz", "ru", "en"]).default("uz"),
 });
 
 export async function submitApplication(_prev: ApplyState, formData: FormData): Promise<ApplyState> {
   const raw = Object.fromEntries(
     ["name", "phone", "company", "service_id", "message", "lang"].map((k) => [k, String(formData.get(k) ?? "")]),
   );
-  const lang: Lang = raw.lang === "ru" ? "ru" : "uz";
+  const lang: Lang = isLang(raw.lang) ? raw.lang : "uz";
   const t = dict[lang];
 
   // Bot tuzog'i: odamlar bu yashirin maydonni to'ldirmaydi

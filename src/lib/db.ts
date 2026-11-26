@@ -66,17 +66,28 @@ CREATE TABLE IF NOT EXISTS content (
   uz TEXT NOT NULL,
   ru TEXT NOT NULL
 );
+-- Ingliz tili (keyin qo'shilgan; mavjud bazalarda ham ustun paydo bo'ladi)
+ALTER TABLE content ADD COLUMN IF NOT EXISTS en TEXT NOT NULL DEFAULT '';
+ALTER TABLE services ADD COLUMN IF NOT EXISTS name_en TEXT NOT NULL DEFAULT '';
+ALTER TABLE services ADD COLUMN IF NOT EXISTS desc_en TEXT NOT NULL DEFAULT '';
+ALTER TABLE services ADD COLUMN IF NOT EXISTS unit_en TEXT NOT NULL DEFAULT '';
 `;
 
+// [name_uz, name_ru, desc_uz, desc_ru, price, price_from, unit_uz, unit_ru, name_en, desc_en, unit_en]
 const SEED_SERVICES = [
-  ["Majburiy audit", "Обязательный аудит", "Yillik moliyaviy hisobot auditi va auditorlik xulosasi (XAS asosida).", "Аудит годовой финансовой отчётности и аудиторское заключение (по МСА).", 15000000, true, "yiliga", "в год"],
-  ["Tashabbusli audit", "Инициативный аудит", "Rahbariyat yoki ta'sischilar buyurtmasi bo'yicha alohida yo'nalish yoki davr tekshiruvi.", "Проверка отдельного участка или периода по заказу руководства или учредителей.", 8000000, true, "", ""],
-  ["Buxgalteriya hisobini yuritish", "Ведение бухгалтерского учёта", "Birlamchi hujjatlardan tortib soliq hisobotlarigacha — to'liq autsorsing.", "Полный аутсорсинг: от первичных документов до налоговой отчётности.", 3000000, true, "oyiga", "в месяц"],
-  ["Hisobni tiklash", "Восстановление учёта", "O'tgan davrlar hisobini tiklash, qoldiqlarni solishtirish va tuzatish.", "Восстановление учёта за прошлые периоды, сверка и корректировка остатков.", 5000000, true, "", ""],
-  ["QQS qaytarishda ko'mak", "Сопровождение возврата НДС", "Hujjatlar paketini tayyorlash va soliq organi bilan muloqotda hamrohlik.", "Подготовка пакета документов и сопровождение при взаимодействии с налоговым органом.", 6000000, true, "", ""],
-  ["Soliq maslahati", "Налоговая консультация", "Soliq xatarlarini baholash, operatsiyalarni qonuniy rejalashtirish.", "Оценка налоговых рисков, законное планирование операций.", 500000, false, "bir soat", "за час"],
-  ["XBXS bo'yicha hisobot", "Отчётность по МСФО", "Milliy hisobotni XBXS formatiga transformatsiya qilish.", "Трансформация национальной отчётности в формат МСФО.", 20000000, true, "", ""],
+  ["Majburiy audit", "Обязательный аудит", "Yillik moliyaviy hisobot auditi va auditorlik xulosasi (XAS asosida).", "Аудит годовой финансовой отчётности и аудиторское заключение (по МСА).", 15000000, true, "yiliga", "в год", "Statutory audit", "Audit of annual financial statements and an auditor's report (under ISA).", "per year"],
+  ["Tashabbusli audit", "Инициативный аудит", "Rahbariyat yoki ta'sischilar buyurtmasi bo'yicha alohida yo'nalish yoki davr tekshiruvi.", "Проверка отдельного участка или периода по заказу руководства или учредителей.", 8000000, true, "", "", "Voluntary audit", "Review of a specific area or period commissioned by management or shareholders.", ""],
+  ["Buxgalteriya hisobini yuritish", "Ведение бухгалтерского учёта", "Birlamchi hujjatlardan tortib soliq hisobotlarigacha — to'liq autsorsing.", "Полный аутсорсинг: от первичных документов до налоговой отчётности.", 3000000, true, "oyiga", "в месяц", "Bookkeeping", "Full outsourcing: from source documents to tax returns.", "per month"],
+  ["Buxgalteriya hisobini qayta tiklash", "Восстановление бухгалтерского учёта", "O'tgan davrlar hisobini tiklash, qoldiqlarni solishtirish va tuzatish.", "Восстановление учёта за прошлые периоды, сверка и корректировка остатков.", 5000000, true, "", "", "Restoration of accounting records", "Restoring records for past periods, reconciling and correcting balances.", ""],
+  ["QQS qaytarishda ko'mak", "Сопровождение возврата НДС", "Hujjatlar paketini tayyorlash va soliq organi bilan muloqotda hamrohlik.", "Подготовка пакета документов и сопровождение при взаимодействии с налоговым органом.", 6000000, true, "", "", "VAT refund support", "Preparing the document package and supporting you in dealings with the tax authority.", ""],
+  ["Soliq maslahati", "Налоговая консультация", "Soliq xatarlarini baholash, operatsiyalarni qonuniy rejalashtirish.", "Оценка налоговых рисков, законное планирование операций.", 500000, false, "bir soat", "за час", "Tax consulting", "Assessing tax risks and planning transactions lawfully.", "per hour"],
+  ["XBXS bo'yicha hisobot", "Отчётность по МСФО", "Milliy hisobotni XBXS formatiga transformatsiya qilish.", "Трансформация национальной отчётности в формат МСФО.", 20000000, true, "", "", "IFRS reporting", "Converting national financial statements to IFRS format.", ""],
 ] as const;
+
+// Avvalgi nomlar: admin nomini o'zgartirgan bo'lsa ham inglizchasini topish uchun
+const SEED_ALIASES: Record<string, string[]> = {
+  "Buxgalteriya hisobini qayta tiklash": ["Hisobni tiklash"],
+};
 
 async function initSchema() {
   const client = await getPool().connect();
@@ -87,9 +98,16 @@ async function initSchema() {
 
     for (const f of CONTENT_FIELDS) {
       await client.query(
-        "INSERT INTO content (key, uz, ru) VALUES ($1, $2, $3) ON CONFLICT (key) DO NOTHING",
-        [f.key, f.uz, f.ru],
+        "INSERT INTO content (key, uz, ru, en) VALUES ($1, $2, $3, $4) ON CONFLICT (key) DO NOTHING",
+        [f.key, f.uz, f.ru, f.en],
       );
+      // Ingliz tili keyin qo'shildi: bo'sh qolgan inglizcha matnni to'ldiramiz.
+      // Ikkala tilda bir xil maydonlar (telefon, email) uchun o'zbekcha qiymat ko'chiriladi.
+      if (f.shared) {
+        await client.query("UPDATE content SET en = uz WHERE key = $1 AND en = ''", [f.key]);
+      } else if (f.en) {
+        await client.query("UPDATE content SET en = $2 WHERE key = $1 AND en = ''", [f.key, f.en]);
+      }
     }
 
     const { rows } = await client.query<{ n: string }>("SELECT count(*)::text AS n FROM services");
@@ -97,11 +115,21 @@ async function initSchema() {
       let sort = 10;
       for (const s of SEED_SERVICES) {
         await client.query(
-          `INSERT INTO services (name_uz, name_ru, desc_uz, desc_ru, price, price_from, unit_uz, unit_ru, sort)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+          `INSERT INTO services (name_uz, name_ru, desc_uz, desc_ru, price, price_from, unit_uz, unit_ru, name_en, desc_en, unit_en, sort)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
           [...s, sort],
         );
         sort += 10;
+      }
+    } else {
+      // Mavjud xizmatlarga inglizcha nom/tavsif/birlikni qo'shamiz (faqat bo'sh bo'lsa)
+      for (const s of SEED_SERVICES) {
+        const names = [s[0], ...(SEED_ALIASES[s[0]] ?? [])];
+        await client.query(
+          `UPDATE services SET name_en = $2, desc_en = $3, unit_en = $4
+           WHERE name_en = '' AND name_uz = ANY($1::text[])`,
+          [names, s[8], s[9], s[10]],
+        );
       }
     }
     await client.query("COMMIT");

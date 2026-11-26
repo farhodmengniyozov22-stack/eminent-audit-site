@@ -10,6 +10,7 @@ import { STATUSES, type Status } from "@/lib/data";
 function refreshAll() {
   revalidatePath("/", "layout");
   revalidatePath("/ru", "layout");
+  revalidatePath("/en", "layout");
   revalidatePath("/admin", "layout");
 }
 
@@ -68,10 +69,13 @@ function serviceFromForm(formData: FormData) {
     name_ru: str("name_ru", 200),
     desc_uz: str("desc_uz", 1000),
     desc_ru: str("desc_ru", 1000),
+    name_en: str("name_en", 200),
+    desc_en: str("desc_en", 1000),
     price: priceDigits === "" ? 0 : Number(priceDigits),
     price_from: formData.get("price_from") === "on",
     unit_uz: str("unit_uz", 60),
     unit_ru: str("unit_ru", 60),
+    unit_en: str("unit_en", 60),
     sort: Number(str("sort", 10)) || 0,
     active: formData.get("active") === "on",
   };
@@ -86,17 +90,17 @@ export async function saveService(_prev: ServiceState, formData: FormData): Prom
   if (!Number.isSafeInteger(s.price)) return { error: "Narx juda katta." };
 
   const id = String(formData.get("id") ?? "");
-  const params = [s.name_uz, s.name_ru, s.desc_uz, s.desc_ru, s.price, s.price_from, s.unit_uz, s.unit_ru, s.sort, s.active];
+  const params = [s.name_uz, s.name_ru, s.desc_uz, s.desc_ru, s.price, s.price_from, s.unit_uz, s.unit_ru, s.sort, s.active, s.name_en, s.desc_en, s.unit_en];
   if (/^\d+$/.test(id)) {
     await query(
       `UPDATE services SET name_uz=$1, name_ru=$2, desc_uz=$3, desc_ru=$4, price=$5, price_from=$6,
-       unit_uz=$7, unit_ru=$8, sort=$9, active=$10 WHERE id=$11`,
+       unit_uz=$7, unit_ru=$8, sort=$9, active=$10, name_en=$11, desc_en=$12, unit_en=$13 WHERE id=$14`,
       [...params, Number(id)],
     );
   } else {
     await query(
-      `INSERT INTO services (name_uz, name_ru, desc_uz, desc_ru, price, price_from, unit_uz, unit_ru, sort, active)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+      `INSERT INTO services (name_uz, name_ru, desc_uz, desc_ru, price, price_from, unit_uz, unit_ru, sort, active, name_en, desc_en, unit_en)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
       params,
     );
   }
@@ -119,10 +123,11 @@ export async function saveContent(_prev: ContentState, formData: FormData): Prom
   for (const f of CONTENT_FIELDS) {
     const uz = String(formData.get(`${f.key}__uz`) ?? "").trim().slice(0, 4000);
     const ru = f.shared ? uz : String(formData.get(`${f.key}__ru`) ?? "").trim().slice(0, 4000);
+    const en = f.shared ? uz : String(formData.get(`${f.key}__en`) ?? "").trim().slice(0, 4000);
     await query(
-      `INSERT INTO content (key, uz, ru) VALUES ($1, $2, $3)
-       ON CONFLICT (key) DO UPDATE SET uz = EXCLUDED.uz, ru = EXCLUDED.ru`,
-      [f.key, uz, ru],
+      `INSERT INTO content (key, uz, ru, en) VALUES ($1, $2, $3, $4)
+       ON CONFLICT (key) DO UPDATE SET uz = EXCLUDED.uz, ru = EXCLUDED.ru, en = EXCLUDED.en`,
+      [f.key, uz, ru, en],
     );
   }
   refreshAll();

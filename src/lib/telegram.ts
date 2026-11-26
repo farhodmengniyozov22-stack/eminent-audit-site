@@ -32,7 +32,8 @@ export async function notifyNewApplication(a: {
   if (a.company) lines.push(`<b>Korxona:</b> ${esc(a.company)}`);
   lines.push(`<b>Xizmat:</b> ${esc(a.serviceName || "Tanlanmagan")}`);
   if (a.message) lines.push(`<b>Izoh:</b> ${esc(a.message)}`);
-  lines.push(`<b>Til:</b> ${a.lang === "ru" ? "ruscha" : "o'zbekcha"}`);
+  const langName: Record<string, string> = { uz: "o'zbekcha", ru: "ruscha", en: "inglizcha" };
+  lines.push(`<b>Til:</b> ${langName[a.lang] ?? a.lang}`);
   if (a.adminUrl) lines.push("", `<a href="${esc(a.adminUrl)}">Admin panelda ochish</a>`);
 
   await Promise.all(

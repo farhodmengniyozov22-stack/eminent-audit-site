@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: "Eminent Audit — аудит, бухгалтерия и налоговые консультации",
   description:
     "Обязательный и инициативный аудит, ведение и восстановление учёта, налоговые консультации и отчётность по МСФО. Ташкент.",
-  alternates: { languages: { uz: "/", ru: "/ru" } },
+  alternates: { languages: { uz: "/", ru: "/ru", en: "/en" } },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
