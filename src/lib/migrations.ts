@@ -55,8 +55,30 @@ async function texts2026_11(client: PoolClient) {
   );
 }
 
+/** Eski boshlang'ich qiymatda turgan matnni CONTENT_FIELDS dagi yangi qiymatga almashtiradi */
+async function replaceIfUnchanged(client: PoolClient, old: Record<string, Triple>) {
+  for (const [key, prev] of Object.entries(old)) {
+    const f = CONTENT_FIELDS.find((x) => x.key === key);
+    if (!f) continue;
+    for (const lang of ["uz", "ru", "en"] as const) {
+      await client.query(`UPDATE content SET ${lang} = $2 WHERE key = $1 AND ${lang} = $3`, [key, f[lang], prev[lang]]);
+    }
+  }
+}
+
+// 2026-noyabr: "Qanday hujjatlar kerak bo'ladi?" javobi ro'yxat ko'rinishida
+const faqDocs2026_11 = (client: PoolClient) =>
+  replaceIfUnchanged(client, {
+    faq_3_a: {
+      uz: "Moliyaviy hisobotlar, bosh kitob, asosiy shartnomalar va birlamchi hujjatlar. Aniq ro'yxatni birinchi suhbatdan keyin yuboramiz.",
+      ru: "Финансовая отчётность, главная книга, основные договоры и первичные документы. Точный список пришлём после первой беседы.",
+      en: "Financial statements, the general ledger, key contracts and source documents. We will send you the exact list after our first conversation.",
+    },
+  });
+
 const MIGRATIONS: { id: string; run: (c: PoolClient) => Promise<void> }[] = [
   { id: "2026-11-redesign-texts", run: texts2026_11 },
+  { id: "2026-11-faq-documents", run: faqDocs2026_11 },
 ];
 
 export async function runMigrations(client: PoolClient) {

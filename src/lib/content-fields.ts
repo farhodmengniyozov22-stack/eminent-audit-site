@@ -542,9 +542,9 @@ export const CONTENT_FIELDS: ContentField[] = [
     label: "3-javob",
     group: "Savollar (FAQ)",
     multiline: true,
-    uz: "Moliyaviy hisobotlar, bosh kitob, asosiy shartnomalar va birlamchi hujjatlar. Aniq ro'yxatni birinchi suhbatdan keyin yuboramiz.",
-    ru: "Финансовая отчётность, главная книга, основные договоры и первичные документы. Точный список пришлём после первой беседы.",
-    en: "Financial statements, the general ledger, key contracts and source documents. We will send you the exact list after our first conversation.",
+    uz: "1. Ta'sis hujjatlari\n2. Korxona buxgalteriyasini yuritish bilan bog'liq barcha hujjatlar\nAniq ro'yxatni birinchi suhbatdan keyin yuboramiz.",
+    ru: "1. Учредительные документы\n2. Все документы, связанные с ведением бухгалтерского учёта компании\nТочный список пришлём после первой беседы.",
+    en: "1. Founding documents\n2. All documents related to the company's accounting\nWe will send you the exact list after our first conversation.",
   },
   { key: "faq_4_q", label: "4-savol", group: "Savollar (FAQ)", uz: "Ma'lumotlarim maxfiy saqlanadimi?", ru: "Сохраняется ли конфиденциальность?", en: "Is my information kept confidential?" },
   {

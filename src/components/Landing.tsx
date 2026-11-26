@@ -37,6 +37,47 @@ function StatValue({ value }: { value: string }) {
   );
 }
 
+/**
+ * Savol-javob matni: "1. ..." yoki "- ..." bilan boshlangan qatorlar ro'yxat bo'ladi,
+ * qolgan qatorlar oddiy paragraf.
+ */
+function RichAnswer({ text }: { text: string }) {
+  const blocks: ({ kind: "p"; text: string } | { kind: "ol" | "ul"; items: string[] })[] = [];
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line) continue;
+    const num = line.match(/^\d+[.)]\s+(.*)$/);
+    const dash = line.match(/^[-•]\s+(.*)$/);
+    const kind = num ? "ol" : dash ? "ul" : "p";
+    const body = num?.[1] ?? dash?.[1] ?? line;
+    const last = blocks[blocks.length - 1];
+    if (kind !== "p" && last && last.kind === kind) last.items.push(body);
+    else blocks.push(kind === "p" ? { kind, text: body } : { kind, items: [body] });
+  }
+  return (
+    <div className="mt-3 max-w-[62ch] space-y-2 leading-7 text-muted">
+      {blocks.map((b, i) =>
+        b.kind === "p" ? (
+          <p key={i}>{b.text}</p>
+        ) : (
+          (() => {
+            const List = b.kind;
+            return (
+              <List key={i} className={`space-y-1 pl-6 marker:font-semibold marker:text-accent ${b.kind === "ol" ? "list-decimal" : "list-disc"}`}>
+                {b.items.map((it, j) => (
+                  <li key={j} className="pl-1">
+                    {it}
+                  </li>
+                ))}
+              </List>
+            );
+          })()
+        ),
+      )}
+    </div>
+  );
+}
+
 function Paragraphs({ text, className }: { text: string; className?: string }) {
   return (
     <>
@@ -641,7 +682,7 @@ export async function Landing({ lang }: { lang: Lang }) {
                     <summary className="flex cursor-pointer list-none items-start justify-between gap-6 text-[1.08rem] font-semibold text-ink">
                       {f.q}
                     </summary>
-                    <p className="mt-3 max-w-[62ch] leading-7 text-muted">{f.a}</p>
+                    <RichAnswer text={f.a} />
                   </details>
                 ))}
               </div>
