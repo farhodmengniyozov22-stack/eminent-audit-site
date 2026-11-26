@@ -51,26 +51,26 @@ body {
 
 /* Utilitalar (hidden, md:… va h.k.) bularni bosib keta olishi uchun components qatlamida */
 @layer components {
-  /* Bo'lim yorlig'i (eyebrow): och oltin fondagi yumaloq nishon */
+  /* Bo'lim yorlig'i (eyebrow): to'q yashil nishon, oltin yozuv (til tanlagich bilan bir uslubda) */
   .eyebrow {
     display: inline-flex;
     align-items: center;
     padding: 0.55em 1.15em;
-    border: 1px solid color-mix(in srgb, var(--color-accent) 45%, transparent);
     border-radius: 9999px;
-    background: color-mix(in srgb, var(--color-accent) 20%, transparent);
+    background: var(--color-ink);
+    box-shadow: 0 6px 16px -8px rgba(29, 51, 40, 0.55);
     font-size: 0.9rem;
     font-weight: 700;
     letter-spacing: 0.14em;
     line-height: 1.2;
     text-transform: uppercase;
-    color: #5c3f12;
-  }
-  /* To'q yashil bo'limlarda yorqinroq */
-  .bg-ink .eyebrow {
-    border-color: color-mix(in srgb, #e0b768 45%, transparent);
-    background: color-mix(in srgb, var(--color-accent) 26%, transparent);
     color: #e8c47c;
+  }
+  /* To'q yashil bo'limlarda teskarisi: oltin nishon, to'q yashil yozuv */
+  .bg-ink .eyebrow {
+    background: #e0b768;
+    box-shadow: none;
+    color: var(--color-ink);
   }
   @media (max-width: 640px) {
     .eyebrow {
