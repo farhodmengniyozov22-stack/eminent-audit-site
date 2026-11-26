@@ -608,9 +608,9 @@ export const CONTENT_FIELDS: ContentField[] = [
     key: "contact_address",
     label: "Manzil",
     group: "Aloqa",
-    uz: "Toshkent shahri, Olmazor tumani, Qorasaroy chorrahasi",
-    ru: "г. Ташкент, Алмазарский район, перекрёсток Карасарай",
-    en: "Karasaray crossroads, Olmazor district, Tashkent",
+    uz: "Toshkent shahri, Olmazor tumani, Qorasaroy",
+    ru: "г. Ташкент, Алмазарский район, Карасарай",
+    en: "Karasaray, Olmazor district, Tashkent",
   },
   {
     key: "contact_hours",
