@@ -141,9 +141,9 @@ export const CONTENT_FIELDS: ContentField[] = [
     key: "team_1_creds",
     label: "1-xodim: sertifikatlar (vergul bilan ajrating)",
     group: "Jamoa",
-    uz: "Auditor malaka sertifikati № 05671, CAP, Soliq maslahatchisi",
-    ru: "Сертификат аудитора № 05671, CAP, Налоговый консультант",
-    en: "Auditor certificate No. 05671, CAP, Tax consultant",
+    uz: "Auditor malaka sertifikati № 05671, CAP, Soliq maslahatchisi sertifikati № 00368",
+    ru: "Сертификат аудитора № 05671, CAP, Сертификат налогового консультанта № 00368",
+    en: "Auditor certificate No. 05671, CAP, Tax consultant certificate No. 00368",
   },
   // 2
   { key: "team_2_name", label: "2-xodim: ism", group: "Jamoa", uz: "Ten Din Xin", ru: "Тен Дин Хин", en: "Ten Din Xin" },
