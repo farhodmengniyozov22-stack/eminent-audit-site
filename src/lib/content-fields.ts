@@ -591,9 +591,9 @@ export const CONTENT_FIELDS: ContentField[] = [
     label: "Email",
     group: "Aloqa",
     shared: true,
-    uz: "info@eminentaudit.uz",
-    ru: "info@eminentaudit.uz",
-    en: "info@eminentaudit.uz",
+    uz: "eminent.audit@bk.ru",
+    ru: "eminent.audit@bk.ru",
+    en: "eminent.audit@bk.ru",
   },
   {
     key: "contact_telegram",

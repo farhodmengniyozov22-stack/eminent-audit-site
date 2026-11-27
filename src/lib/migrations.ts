@@ -130,6 +130,15 @@ const tenCerts2026_11 = (client: PoolClient) =>
     team_2_name: { uz: "Ten Din Xin", ru: "Тен Дин Хин", en: "Ten Din Xin" },
   });
 
+// 2026-noyabr: to'g'ri email — eminent.audit@bk.ru (nuqta bilan)
+async function email2026_11(client: PoolClient) {
+  await client.query(
+    `UPDATE content SET uz = $1, ru = $1, en = $1
+     WHERE key = 'contact_email' AND uz IN ('eminentaudit@bk.ru', 'info@eminentaudit.uz')`,
+    ["eminent.audit@bk.ru"],
+  );
+}
+
 const MIGRATIONS: { id: string; run: (c: PoolClient) => Promise<void> }[] = [
   { id: "2026-11-redesign-texts", run: texts2026_11 },
   { id: "2026-11-faq-documents", run: faqDocs2026_11 },
@@ -137,6 +146,7 @@ const MIGRATIONS: { id: string; run: (c: PoolClient) => Promise<void> }[] = [
   { id: "2026-11-telegram", run: telegram2026_11 },
   { id: "2026-11-cap-cert", run: capCert2026_11 },
   { id: "2026-11-ten-certs", run: tenCerts2026_11 },
+  { id: "2026-11-email", run: email2026_11 },
 ];
 
 export async function runMigrations(client: PoolClient) {
