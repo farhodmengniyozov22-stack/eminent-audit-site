@@ -220,6 +220,9 @@ export async function Landing({ lang }: { lang: Lang }) {
   const voluntaryService = services.find((s) => /tashabbusli|ixtiyoriy/i.test(s.name_uz));
   const taxItems = pairs(c.tax_items);
   const taxService = services.find((s) => /soliq/i.test(s.name_uz));
+  const accountingItems = pairs(c.accounting_items);
+  const accountingService =
+    services.find((s) => /buxgalter.*yurit/i.test(s.name_uz)) ?? services.find((s) => /buxgalter/i.test(s.name_uz));
   const team = [1, 2, 3, 4]
     .map((n) => ({
       name: c[`team_${n}_name`],
@@ -238,6 +241,7 @@ export async function Landing({ lang }: { lang: Lang }) {
     { href: "#majburiy-audit", label: t.nav_mandatory, show: mandatoryItems.length > 0 },
     { href: "#ixtiyoriy-audit", label: t.nav_voluntary, show: voluntaryItems.length > 0 },
     { href: "#soliq-maslahati", label: t.nav_tax, show: taxItems.length > 0 },
+    { href: "#buxgalteriya", label: t.nav_accounting, show: accountingItems.length > 0 },
   ]
     .filter((it) => it.show)
     .map(({ href, label }) => ({ href, label }));
@@ -695,6 +699,54 @@ export async function Landing({ lang }: { lang: Lang }) {
                   </li>
                 ))}
               </ol>
+            </div>
+          </section>
+        )}
+
+        {/* Buxgalteriya xizmatlari — to'q yashil bo'lim, raqamlangan kartochkalar */}
+        {accountingItems.length > 0 && (
+          <section id="buxgalteriya" className="bg-ink text-paper">
+            <div className={`${wrap} py-20 md:py-28`}>
+              <div className="grid gap-6 md:grid-cols-[1fr_1fr] md:items-end md:gap-16">
+                <div>
+                  <p className="eyebrow">{t.nav_accounting}</p>
+                  <h2 className={`${h2} mt-4 !text-paper`}>
+                    <Accent text={c.accounting_title} />
+                  </h2>
+                </div>
+                {c.accounting_text && <p className="text-lg leading-8 text-paper/75">{c.accounting_text}</p>}
+              </div>
+
+              <ol className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+                {accountingItems.map((it, i) => (
+                  <li
+                    key={i}
+                    className="rounded-[1.25rem] border border-white/10 bg-white/[0.04] p-7 transition-[transform,border-color] duration-200 hover:-translate-y-1 hover:border-accent/60"
+                  >
+                    <span className="tnum font-serif text-3xl font-medium italic leading-none text-accent" aria-hidden="true">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <h3 className="mt-5 font-serif text-xl font-bold leading-snug text-white">{it.title}</h3>
+                    {it.text && <p className="mt-2 leading-7 text-paper/65">{it.text}</p>}
+                  </li>
+                ))}
+              </ol>
+
+              {(c.accounting_cta_title || c.accounting_cta_text) && (
+                <div className="mt-5 flex flex-col gap-5 rounded-[1.5rem] border-[1.5px] border-accent/50 p-7 md:flex-row md:items-center md:justify-between md:p-8">
+                  <div>
+                    {c.accounting_cta_title && <p className="font-serif text-2xl font-bold text-white">{c.accounting_cta_title}</p>}
+                    {c.accounting_cta_text && <p className="mt-1.5 max-w-[62ch] leading-7 text-paper/75">{c.accounting_cta_text}</p>}
+                  </div>
+                  {accountingService ? (
+                    <PickServiceButton id={accountingService.id} label={t.cta_consult} className="btn-gold shrink-0 px-7 py-3.5 text-base" />
+                  ) : (
+                    <a href="#ariza" className="btn-gold shrink-0 px-7 py-3.5 text-base">
+                      {t.cta_consult}
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
           </section>
         )}

@@ -448,6 +448,72 @@ export const CONTENT_FIELDS: ContentField[] = [
     en: "Describe your situation in a few words — our tax consultant will contact you within one business day.",
   },
 
+  // Buxgalteriya xizmatlari (ro'yxatda har qator: "Sarlavha | izoh")
+  {
+    key: "accounting_title",
+    label: "Bo'lim sarlavhasi" + ACCENT_HINT,
+    group: "Buxgalteriya xizmatlari",
+    uz: "Buxgalteriyani *ishonchli* qo'llarga topshiring",
+    ru: "Доверьте бухгалтерию *надёжным* рукам",
+    en: "Leave your accounting in *safe* hands",
+  },
+  {
+    key: "accounting_text",
+    label: "Sarlavha ostidagi matn",
+    group: "Buxgalteriya xizmatlari",
+    multiline: true,
+    uz: "Buxgalteriya sohasidagi 11 yillik tajribamizga tayanib, hisobingizni qonunchilik talablariga to'liq muvofiq yuritamiz. Siz biznesingizni rivojlantirishga e'tibor qaratasiz — hisob-kitoblar, hisobotlar va soliq organlari bilan muloqot bizning zimmamizda.",
+    ru: "Опираясь на 11-летний опыт в бухгалтерии, ведём ваш учёт в полном соответствии с законодательством. Вы занимаетесь развитием бизнеса — расчёты, отчётность и взаимодействие с налоговыми органами берём на себя.",
+    en: "Drawing on 11 years of accounting experience, we keep your books in full compliance with the law. You focus on growing the business — calculations, reporting and dealings with the tax authorities are on us.",
+  },
+  {
+    key: "accounting_items",
+    label: "Xizmatlar (har qatorga bittadan: Sarlavha | izoh)",
+    group: "Buxgalteriya xizmatlari",
+    multiline: true,
+    uz: [
+      "Buxgalteriya hisobini yuritish | Birlamchi hujjatlarni rasmiylashtirishdan tortib yillik moliyaviy hisobotgacha — buxgalteriyani to'liq o'z zimmamizga olamiz.",
+      "Buxgalteriya hisobini qayta tiklash | Yuritilmagan yoki chalkash hisobni birlamchi hujjatlar asosida tiklab, hisobotlarni tartibga keltiramiz.",
+      "Soliq va statistika hisobotlari | Hisobotlarni to'g'ri tayyorlab, belgilangan muddatlarda elektron tarzda topshiramiz — kechikish va jarimalarsiz.",
+      "Ish haqi va kadrlar hisobi | Ish haqi, ushlanmalar va ijtimoiy soliqni hisoblaymiz, xodimlar bo'yicha hisobotlarni yuritamiz.",
+      "Hisob siyosatini ishlab chiqish | Korxonangiz faoliyatiga mos hisob siyosati va hujjatlar aylanishi tartibini ishlab chiqamiz.",
+      "Buxgalteringizga maslahat va ko'mak | Shtatdagi buxgalteringizga murakkab operatsiyalar, yil yakunini yopish va hisobotlar bo'yicha professional yordam beramiz.",
+    ].join("\n"),
+    ru: [
+      "Ведение бухгалтерского учёта | От оформления первичных документов до годовой финансовой отчётности — берём бухгалтерию полностью на себя.",
+      "Восстановление бухгалтерского учёта | Восстановим запущенный или запутанный учёт по первичным документам и приведём отчётность в порядок.",
+      "Налоговая и статистическая отчётность | Правильно подготовим и сдадим отчёты в электронном виде в установленные сроки — без опозданий и штрафов.",
+      "Расчёт зарплаты и кадровый учёт | Рассчитаем зарплату, удержания и социальный налог, ведём отчётность по сотрудникам.",
+      "Разработка учётной политики | Разработаем учётную политику и порядок документооборота с учётом специфики вашей компании.",
+      "Консультации и поддержка вашего бухгалтера | Поможем штатному бухгалтеру со сложными операциями, закрытием года и отчётностью.",
+    ].join("\n"),
+    en: [
+      "Bookkeeping | From processing source documents to the annual financial statements — we take your accounting off your hands completely.",
+      "Restoration of accounting records | We rebuild neglected or messy books from source documents and bring your reporting in order.",
+      "Tax and statistical reporting | We prepare reports correctly and file them electronically on time — no delays, no penalties.",
+      "Payroll and HR records | We calculate salaries, deductions and social tax and keep employee reporting up to date.",
+      "Accounting policy | We draw up an accounting policy and document workflow tailored to your business.",
+      "Support for your in-house accountant | We help your accountant with complex transactions, year-end closing and reporting.",
+    ].join("\n"),
+  },
+  {
+    key: "accounting_cta_title",
+    label: "Pastki taklif: sarlavha",
+    group: "Buxgalteriya xizmatlari",
+    uz: "Buxgalteriyangiz qanday holatda?",
+    ru: "В каком состоянии ваша бухгалтерия?",
+    en: "What state are your books in?",
+  },
+  {
+    key: "accounting_cta_text",
+    label: "Pastki taklif: matn",
+    group: "Buxgalteriya xizmatlari",
+    multiline: true,
+    uz: "Qisqacha yozing — hisobingiz holatini ko'rib chiqib, sizga mos xizmat formatini taklif qilamiz.",
+    ru: "Напишите в двух словах — оценим состояние учёта и предложим подходящий формат работы.",
+    en: "Drop us a line — we'll review the state of your accounts and suggest the right format of service.",
+  },
+
   // Ish tartibi
   {
     key: "steps_title",
