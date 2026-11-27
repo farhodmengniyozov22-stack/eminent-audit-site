@@ -1,14 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { CATEGORY_LABELS, CLIENT_CATEGORIES, splitClientName, type ClientCategory, type Lang3 } from "@/lib/clients";
+import { useState } from "react";
+import { activityLabel, splitClientName, type Lang3 } from "@/lib/clients";
 import { uzText } from "@/lib/uz-alphabet";
 
-type Item = { name: string; category: string };
+type Item = { name: string; activity: string };
 type Group = { year: number; items: Item[] };
 type Labels = {
   years: string;
-  all: string;
   search: string;
   more: string;
   less: string;
@@ -25,77 +24,56 @@ function firstLetter(name: string) {
 }
 
 /**
- * Mijozlar ro'yxati: yillar, soha bo'yicha saralash, qidiruv va "Yana ko'rsatish".
- * Korxona nomi o'zgarmaydi, tashkiliy shakli (MChJ → ООО → LLC) va soha nomi tilga moslashadi.
+ * Mijozlar ro'yxati: yillar, umumiy son, qidiruv va "Yana ko'rsatish".
+ * Har bir korxona yonida faoliyat turi (Excel'dagidek) — tilga moslashgan holda.
+ * Korxona nomi o'zgarmaydi, tashkiliy shakli (MChJ → ООО → LLC) tilga moslashadi.
  */
 export function ClientsTabs({ groups, lang, labels }: { groups: Group[]; lang: Lang3; labels: Labels }) {
   const [year, setYear] = useState(groups[0]?.year);
-  const [cat, setCat] = useState<ClientCategory | "all">("all");
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
 
   const current = groups.find((g) => g.year === year) ?? groups[0];
-
-  const counts = useMemo(() => {
-    const c: Record<string, number> = {};
-    for (const it of current?.items ?? []) c[it.category] = (c[it.category] ?? 0) + 1;
-    return c;
-  }, [current]);
-
-  const cats = CLIENT_CATEGORIES.filter((k) => counts[k]);
-  const query = q.trim().toLowerCase();
-  const filtered = (current?.items ?? []).filter(
-    (it) => (cat === "all" || it.category === cat) && (!query || it.name.toLowerCase().includes(query)),
-  );
-  // Qidiruv yoki soha tanlanganda hammasi ko'rinadi; aks holda dastlab PAGE ta
-  const showAll = open || !!query || cat !== "all";
-  const visible = showAll ? filtered : filtered.slice(0, PAGE);
-  const hidden = filtered.length - visible.length;
-
   if (!current) return null;
 
-  const chip = (active: boolean) =>
-    `tnum inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
-      active ? "bg-ink text-paper" : "border-[1.5px] border-ledger bg-sheet text-ink hover:border-ink/40"
-    }`;
+  const query = q.trim().toLowerCase();
+  const filtered = current.items.filter((it) => !query || it.name.toLowerCase().includes(query));
+  const showAll = open || !!query;
+  const visible = showAll ? filtered : filtered.slice(0, PAGE);
+  const hidden = filtered.length - visible.length;
 
   return (
     <div className="mt-12">
       {groups.length > 1 && (
         <div role="tablist" aria-label={labels.years} className="mb-5 flex flex-wrap gap-2">
-          {groups.map((g) => (
-            <button
-              key={g.year}
-              type="button"
-              role="tab"
-              aria-selected={g.year === current.year}
-              onClick={() => {
-                setYear(g.year);
-                setCat("all");
-                setOpen(false);
-              }}
-              className={chip(g.year === current.year)}
-            >
-              {g.year}
-            </button>
-          ))}
+          {groups.map((g) => {
+            const active = g.year === current.year;
+            return (
+              <button
+                key={g.year}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => {
+                  setYear(g.year);
+                  setOpen(false);
+                }}
+                className={`tnum rounded-full px-5 py-2 text-sm font-semibold transition-colors ${
+                  active ? "bg-ink text-paper" : "border-[1.5px] border-ledger bg-sheet text-ink hover:border-ink/40"
+                }`}
+              >
+                {g.year}
+              </button>
+            );
+          })}
         </div>
       )}
 
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-wrap gap-2">
-          <button type="button" aria-pressed={cat === "all"} onClick={() => setCat("all")} className={chip(cat === "all")}>
-            {labels.all}
-            <span className={cat === "all" ? "text-accent" : "text-muted"}>{current.items.length}</span>
-          </button>
-          {cats.map((k) => (
-            <button key={k} type="button" aria-pressed={cat === k} onClick={() => setCat(k)} className={chip(cat === k)}>
-              {uzText(CATEGORY_LABELS[k][lang], lang)}
-              <span className={cat === k ? "text-accent" : "text-muted"}>{counts[k]}</span>
-            </button>
-          ))}
-        </div>
-        <label className="relative block lg:w-72">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <p className="tnum font-serif text-xl font-semibold text-ink">
+          {labels.total.replace("{n}", String(current.items.length))}
+        </p>
+        <label className="relative block sm:w-80">
           <span className="sr-only">{labels.search}</span>
           <svg
             className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted"
@@ -127,21 +105,21 @@ export function ClientsTabs({ groups, lang, labels }: { groups: Group[]; lang: L
         <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {visible.map((it, i) => {
             const { brand, form } = splitClientName(it.name, lang);
-            const catRaw = CATEGORY_LABELS[it.category as ClientCategory]?.[lang];
-            const catLabel = catRaw ? uzText(catRaw, lang) : "";
+            const act = it.activity ? uzText(activityLabel(it.activity, lang), lang) : "";
             return (
-              <li key={`${it.name}-${i}`} className="flex items-center gap-3 rounded-2xl border border-ledger bg-sheet px-4 py-3">
+              <li key={`${it.name}-${i}`} className="flex items-start gap-3 rounded-2xl border border-ledger bg-sheet px-4 py-3.5">
                 <span
                   aria-hidden="true"
-                  className="grid size-9 shrink-0 place-items-center rounded-xl bg-ink font-serif text-base font-semibold italic text-accent"
+                  className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-xl bg-ink font-serif text-base font-semibold italic text-accent"
                 >
                   {firstLetter(brand)}
                 </span>
                 <span className="min-w-0">
-                  <span className="line-clamp-2 block break-words font-semibold leading-snug text-ink" title={it.name}>
+                  <span className="block break-words font-semibold leading-snug text-ink" title={it.name}>
                     {brand}
+                    {form && <span className="ml-1.5 text-xs font-medium text-muted">{form}</span>}
                   </span>
-                  <span className="block truncate text-xs text-muted">{[form, catLabel].filter(Boolean).join(" · ")}</span>
+                  {act && <span className="mt-1 block text-[0.8rem] leading-snug text-muted">{act}</span>}
                 </span>
               </li>
             );
@@ -149,8 +127,8 @@ export function ClientsTabs({ groups, lang, labels }: { groups: Group[]; lang: L
         </ul>
       )}
 
-      {!query && cat === "all" && filtered.length > PAGE && (
-        <div className="mt-8 flex flex-col items-center gap-2">
+      {!query && filtered.length > PAGE && (
+        <div className="mt-8 flex justify-center">
           <button
             type="button"
             onClick={() => setOpen((o) => !o)}
@@ -158,7 +136,6 @@ export function ClientsTabs({ groups, lang, labels }: { groups: Group[]; lang: L
           >
             {open ? labels.less : `${labels.more} (${hidden})`}
           </button>
-          <span className="text-xs text-muted">{labels.total.replace("{n}", String(filtered.length))}</span>
         </div>
       )}
     </div>

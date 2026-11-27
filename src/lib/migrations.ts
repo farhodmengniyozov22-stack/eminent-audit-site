@@ -84,18 +84,20 @@ async function clients2026(client: PoolClient) {
   const seen = new Set(existing.rows.map((r) => clientKey(r.name)));
   const names: string[] = [];
   const cats: string[] = [];
+  const acts: string[] = [];
   for (const line of CLIENTS_2026) {
     const p = parseClientLine(line);
     if (!p || seen.has(clientKey(p.name))) continue;
     seen.add(clientKey(p.name));
     names.push(p.name);
     cats.push(p.category);
+    acts.push(p.activity);
   }
   if (!names.length) return;
   await client.query(
-    `INSERT INTO clients (name, year, sort, category)
-     SELECT n, 2026, s, c FROM unnest($1::text[], $2::int[], $3::text[]) AS t(n, s, c)`,
-    [names, names.map((_, i) => (i + 1) * 10), cats],
+    `INSERT INTO clients (name, year, sort, category, activity)
+     SELECT n, 2026, s, c, a FROM unnest($1::text[], $2::int[], $3::text[], $4::text[]) AS t(n, s, c, a)`,
+    [names, names.map((_, i) => (i + 1) * 10), cats, acts],
   );
 }
 

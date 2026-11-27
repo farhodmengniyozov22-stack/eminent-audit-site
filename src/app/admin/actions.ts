@@ -134,6 +134,7 @@ export async function addClients(_prev: ClientsState, formData: FormData): Promi
 
   const names: string[] = [];
   const cats: string[] = [];
+  const acts: string[] = [];
   let skipped = 0;
   for (const p of parsed) {
     const key = clientKey(p.name);
@@ -144,13 +145,14 @@ export async function addClients(_prev: ClientsState, formData: FormData): Promi
     seen.add(key);
     names.push(p.name);
     cats.push(p.category);
+    acts.push(p.activity);
   }
   if (names.length) {
     const sorts = names.map((_, i) => sortStart + (i + 1) * 10);
     await query(
-      `INSERT INTO clients (name, year, sort, category)
-       SELECT n, $2, s, c FROM unnest($1::text[], $3::int[], $4::text[]) AS t(n, s, c)`,
-      [names, year, sorts, cats],
+      `INSERT INTO clients (name, year, sort, category, activity)
+       SELECT n, $2, s, c, a FROM unnest($1::text[], $3::int[], $4::text[], $5::text[]) AS t(n, s, c, a)`,
+      [names, year, sorts, cats, acts],
     );
   }
   refreshAll();

@@ -60,12 +60,12 @@ export async function getServices({ activeOnly }: { activeOnly: boolean }) {
   );
 }
 
-export type Client = { id: number; name: string; year: number; sort: number; active: boolean; category: string };
+export type Client = { id: number; name: string; year: number; sort: number; active: boolean; category: string; activity: string };
 
 /** Mijozlar: yangi yillar birinchi, yil ichida tartib raqami va qo'shilish tartibida */
 export async function getClients({ activeOnly }: { activeOnly: boolean }) {
   return query<Client>(
-    `SELECT id, name, year, sort, active, category FROM clients ${activeOnly ? "WHERE active" : ""} ORDER BY year DESC, sort, id`,
+    `SELECT id, name, year, sort, active, category, activity FROM clients ${activeOnly ? "WHERE active" : ""} ORDER BY year DESC, sort, id`,
   );
 }
 
