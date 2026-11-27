@@ -109,11 +109,34 @@ async function telegram2026_11(client: PoolClient) {
   );
 }
 
+// 2026-noyabr: rahbar sertifikatlari tartibi (Auditor, Soliq maslahatchisi, CAP) va CAP raqami
+const capCert2026_11 = (client: PoolClient) =>
+  replaceIfUnchanged(client, {
+    team_1_creds: {
+      uz: "Auditor malaka sertifikati № 05671, CAP, Soliq maslahatchisi sertifikati № 00368",
+      ru: "Сертификат аудитора № 05671, CAP, Сертификат налогового консультанта № 00368",
+      en: "Auditor certificate No. 05671, CAP, Tax consultant certificate No. 00368",
+    },
+  });
+
+// 2026-noyabr: Ten Din Xin — CAP va CIPA raqamlari, ruscha ism sertifikatdagidek ("Тен Дин Хын")
+const tenCerts2026_11 = (client: PoolClient) =>
+  replaceIfUnchanged(client, {
+    team_2_creds: {
+      uz: "Auditor malaka sertifikati № 06492, CAP, CIPA",
+      ru: "Сертификат аудитора № 06492, CAP, CIPA",
+      en: "Auditor certificate No. 06492, CAP, CIPA",
+    },
+    team_2_name: { uz: "Ten Din Xin", ru: "Тен Дин Хин", en: "Ten Din Xin" },
+  });
+
 const MIGRATIONS: { id: string; run: (c: PoolClient) => Promise<void> }[] = [
   { id: "2026-11-redesign-texts", run: texts2026_11 },
   { id: "2026-11-faq-documents", run: faqDocs2026_11 },
   { id: "2026-11-clients-2026", run: clients2026 },
   { id: "2026-11-telegram", run: telegram2026_11 },
+  { id: "2026-11-cap-cert", run: capCert2026_11 },
+  { id: "2026-11-ten-certs", run: tenCerts2026_11 },
 ];
 
 export async function runMigrations(client: PoolClient) {
