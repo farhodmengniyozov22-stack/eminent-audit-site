@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { activityLabel, splitClientName, type Lang3 } from "@/lib/clients";
 import { uzText } from "@/lib/uz-alphabet";
 
@@ -12,7 +12,8 @@ type Labels = {
   more: string;
   less: string;
   none: string;
-  total: string; // "{n}" o'rniga son qo'yiladi
+  total: string; // "{y}" o'rniga yil, "{n}" o'rniga son qo'yiladi
+  year: string; // "{y}-yil"
 };
 
 const PAGE = 24;
@@ -33,6 +34,21 @@ export function ClientsTabs({ groups, lang, labels }: { groups: Group[]; lang: L
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
 
+  // Menyudagi "2026-yil" (#mijozlar-2026) havolasi bosilganda o'sha yil ochiladi
+  useEffect(() => {
+    const apply = () => {
+      const m = window.location.hash.match(/^#mijozlar-(\d{4})$/);
+      const y = m ? Number(m[1]) : NaN;
+      if (groups.some((g) => g.year === y)) {
+        setYear(y);
+        setOpen(false);
+      }
+    };
+    apply();
+    window.addEventListener("hashchange", apply);
+    return () => window.removeEventListener("hashchange", apply);
+  }, [groups]);
+
   const current = groups.find((g) => g.year === year) ?? groups[0];
   if (!current) return null;
 
@@ -44,34 +60,33 @@ export function ClientsTabs({ groups, lang, labels }: { groups: Group[]; lang: L
 
   return (
     <div className="mt-12">
-      {groups.length > 1 && (
-        <div role="tablist" aria-label={labels.years} className="mb-5 flex flex-wrap gap-2">
-          {groups.map((g) => {
-            const active = g.year === current.year;
-            return (
-              <button
-                key={g.year}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() => {
-                  setYear(g.year);
-                  setOpen(false);
-                }}
-                className={`tnum rounded-full px-5 py-2 text-sm font-semibold transition-colors ${
-                  active ? "bg-ink text-paper" : "border-[1.5px] border-ledger bg-sheet text-ink hover:border-ink/40"
-                }`}
-              >
-                {g.year}
-              </button>
-            );
-          })}
-        </div>
-      )}
+      {/* Yillar — bitta yil bo'lsa ham ko'rinadi, mijozlar qaysi yilda xizmat olgani bilinib tursin */}
+      <div role="tablist" aria-label={labels.years} className="mb-6 flex flex-wrap gap-2">
+        {groups.map((g) => {
+          const active = g.year === current.year;
+          return (
+            <button
+              key={g.year}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => {
+                setYear(g.year);
+                setOpen(false);
+              }}
+              className={`tnum rounded-full px-6 py-2.5 text-base font-bold transition-colors ${
+                active ? "bg-ink text-paper" : "border-[1.5px] border-ledger bg-sheet text-ink hover:border-ink/40"
+              }`}
+            >
+              {uzText(labels.year.replace("{y}", String(g.year)), lang)}
+            </button>
+          );
+        })}
+      </div>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="tnum font-serif text-xl font-semibold text-ink">
-          {labels.total.replace("{n}", String(current.items.length))}
+          {labels.total.replace("{y}", String(current.year)).replace("{n}", String(current.items.length))}
         </p>
         <label className="relative block sm:w-80">
           <span className="sr-only">{labels.search}</span>

@@ -213,7 +213,13 @@ export async function Landing({ lang }: { lang: Lang }) {
   const navItems: NavItem[] = [
     { href: "#haqida", label: t.nav_about, show: true, children: undefined },
     { href: "#jamoa", label: t.nav_team, show: team.length > 0, children: undefined },
-    { href: "#mijozlar", label: t.nav_clients, show: clientGroups.length > 0, children: undefined },
+    {
+      href: "#mijozlar",
+      label: t.nav_clients,
+      show: clientGroups.length > 0,
+      // Har bir yil alohida band: "2026-yil", kelasi yil "2027-yil" o'zi qo'shiladi
+      children: clientGroups.map((g) => ({ href: `#mijozlar-${g.year}`, label: t.clients_year.replace("{y}", String(g.year)) })),
+    },
     {
       href: "#xizmatlar",
       label: t.nav_services,
@@ -415,7 +421,11 @@ export async function Landing({ lang }: { lang: Lang }) {
 
         {/* Mijozlar — yillar bo'yicha (ro'yxat admin paneldan to'ldiriladi; bo'sh bo'lsa bo'lim ko'rinmaydi) */}
         {clientGroups.length > 0 && (
-          <section id="mijozlar" className="border-t border-ledger">
+          <section id="mijozlar" className="relative border-t border-ledger">
+            {/* Menyudagi "2026-yil" kabi havolalar uchun yil langarlari */}
+            {clientGroups.map((g) => (
+              <span key={g.year} id={`mijozlar-${g.year}`} className="absolute top-0" aria-hidden="true" />
+            ))}
             <div className={`${wrap} py-20 md:py-28`}>
               <div className="grid gap-6 md:grid-cols-[1fr_1fr] md:items-end md:gap-16">
                 <div>
@@ -436,6 +446,7 @@ export async function Landing({ lang }: { lang: Lang }) {
                   less: t.clients_less,
                   none: t.clients_none,
                   total: t.clients_total,
+                  year: t.clients_year,
                 }}
               />
             </div>
