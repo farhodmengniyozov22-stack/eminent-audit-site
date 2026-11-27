@@ -110,6 +110,36 @@ function telegramHref(v?: string) {
   return `https://t.me/${s.replace(/^@/, "").replace(/^t\.me\//, "")}`;
 }
 
+function instagramHref(v?: string) {
+  const s = (v ?? "").trim();
+  if (!s) return "";
+  if (/^https?:\/\//.test(s)) return s;
+  return `https://instagram.com/${s.replace(/^@/, "").replace(/^(www\.)?instagram\.com\//, "").replace(/\/+$/, "")}`;
+}
+
+const socialBtn =
+  "inline-flex items-center gap-2.5 rounded-full border border-white/20 bg-white/[0.07] px-5 py-3 text-[0.95rem] font-semibold transition-colors hover:bg-white/15";
+const socialIcon =
+  "grid size-10 place-items-center rounded-full border-[1.5px] border-ledger text-ink transition-colors hover:border-accent hover:text-accent";
+
+function TelegramIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M21.9 4.3 18.7 19.4c-.2 1.1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L6.2 13 1.4 11.5c-1-.3-1.1-1 .2-1.5L20.5 2.8c.9-.3 1.7.2 1.4 1.5z" />
+    </svg>
+  );
+}
+
+function InstagramIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.5" cy="6.5" r="0.6" fill="currentColor" />
+    </svg>
+  );
+}
+
 // Xizmat kartochkalari uchun ikonkalar (tartib bo'yicha aylanadi)
 const ICONS = [
   <path key="a" d="M9 12l2 2 4-4M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z" />,
@@ -161,6 +191,7 @@ export async function Landing({ lang }: { lang: Lang }) {
   }));
   const phoneHref = `tel:${(c.contact_phone ?? "").replace(/[^\d+]/g, "")}`;
   const tgHref = telegramHref(c.contact_telegram);
+  const igHref = instagramHref(c.contact_instagram);
   const year = new Date().getFullYear();
   const steps = [1, 2, 3, 4].map((n) => ({ title: c[`step_${n}_title`], text: c[`step_${n}_text`] }));
   const stats = [1, 2, 3, 4]
@@ -743,18 +774,21 @@ export async function Landing({ lang }: { lang: Lang }) {
                   </div>
                 )}
               </dl>
-              {tgHref && (
-                <a
-                  href={tgHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-8 inline-flex items-center gap-2.5 rounded-full border border-white/20 bg-white/[0.07] px-5 py-3 text-[0.95rem] font-semibold transition-colors hover:bg-white/15"
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M21.9 4.3 18.7 19.4c-.2 1.1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L6.2 13 1.4 11.5c-1-.3-1.1-1 .2-1.5L20.5 2.8c.9-.3 1.7.2 1.4 1.5z" />
-                  </svg>
-                  {t.telegram}
-                </a>
+              {(tgHref || igHref) && (
+                <div className="mt-8 flex flex-wrap gap-3">
+                  {tgHref && (
+                    <a href={tgHref} target="_blank" rel="noopener noreferrer" className={socialBtn}>
+                      <TelegramIcon />
+                      {t.telegram}
+                    </a>
+                  )}
+                  {igHref && (
+                    <a href={igHref} target="_blank" rel="noopener noreferrer" className={socialBtn}>
+                      <InstagramIcon />
+                      {t.instagram}
+                    </a>
+                  )}
+                </div>
               )}
             </div>
             <ApplicationForm
@@ -771,6 +805,20 @@ export async function Landing({ lang }: { lang: Lang }) {
           <span className="font-serif text-xl font-bold text-ink">
             Eminent <span className="text-accent">Audit</span>
           </span>
+          {(tgHref || igHref) && (
+            <div className="flex items-center gap-2.5">
+              {tgHref && (
+                <a href={tgHref} target="_blank" rel="noopener noreferrer" aria-label="Telegram" className={socialIcon}>
+                  <TelegramIcon />
+                </a>
+              )}
+              {igHref && (
+                <a href={igHref} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className={socialIcon}>
+                  <InstagramIcon />
+                </a>
+              )}
+            </div>
+          )}
           <span>© {year} Eminent Audit. {t.rights}</span>
         </div>
       </footer>

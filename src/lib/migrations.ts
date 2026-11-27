@@ -101,10 +101,19 @@ async function clients2026(client: PoolClient) {
   );
 }
 
+// 2026-noyabr: Telegram sahifasi (bo'sh turgan bo'lsa). Instagram yangi maydon — boshlang'ich qiymati bilan qo'shiladi.
+async function telegram2026_11(client: PoolClient) {
+  await client.query(
+    "UPDATE content SET uz = $1, ru = $1, en = $1 WHERE key = 'contact_telegram' AND uz = ''",
+    ["@FMA_3377"],
+  );
+}
+
 const MIGRATIONS: { id: string; run: (c: PoolClient) => Promise<void> }[] = [
   { id: "2026-11-redesign-texts", run: texts2026_11 },
   { id: "2026-11-faq-documents", run: faqDocs2026_11 },
   { id: "2026-11-clients-2026", run: clients2026 },
+  { id: "2026-11-telegram", run: telegram2026_11 },
 ];
 
 export async function runMigrations(client: PoolClient) {
