@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useTransition } from "react";
+import { CATEGORY_LABELS, type ClientCategory } from "@/lib/clients";
 import type { Client } from "@/lib/data";
 import { addClients, deleteClient, setClientActive, type ClientsState } from "../../actions";
 
@@ -17,17 +18,18 @@ export function AddClientsForm({ defaultYear }: { defaultYear: number }) {
           <input name="year" type="number" min={2000} max={2100} defaultValue={defaultYear} required className={`${input} tnum`} />
         </label>
         <label className="text-sm font-medium">
-          Mijozlar nomi — har qatorga bittadan
+          Mijozlar — har qatorga bittadan
           <textarea
             name="names"
             rows={6}
             required
-            placeholder={'"Namuna" MChJ\n"Misol Savdo" AJ\n...'}
+            placeholder={'"Namuna" MChJ\tAxborot texnologiyalari sohasidagi faoliyat\n"Misol Savdo" MChJ\tTa\'lim faoliyati\n...'}
             className={input}
           />
           <span className="mt-1 block text-xs font-normal text-muted">
-            Excel&apos;dagi nomlar ustunini belgilab, nusxalab shu yerga qo&apos;ying. Shu yilda allaqachon bor nomlar qayta
-            qo&apos;shilmaydi.
+            Excel&apos;dan &quot;Korxona nomi&quot; va &quot;Faoliyat turi&quot; ustunlarini birga belgilab, nusxalab shu yerga
+            qo&apos;ying — soha (IT, Ta&apos;lim, Logistika…) avtomatik aniqlanadi. Faqat nomlarni ham qo&apos;yish mumkin. Shu yilda
+            allaqachon bor nomlar qayta qo&apos;shilmaydi.
           </span>
         </label>
       </div>
@@ -55,6 +57,11 @@ export function ClientRow({ client }: { client: Client }) {
   return (
     <li className={`flex items-center gap-3 px-4 py-2.5 text-sm ${client.active ? "" : "text-muted line-through"}`}>
       <span className="min-w-0 flex-1 truncate">{client.name}</span>
+      {client.category && (
+        <span className="shrink-0 rounded bg-paper px-1.5 py-0.5 text-[0.7rem] text-muted">
+          {CATEGORY_LABELS[client.category as ClientCategory]?.uz ?? client.category}
+        </span>
+      )}
       <button
         type="button"
         disabled={pending}

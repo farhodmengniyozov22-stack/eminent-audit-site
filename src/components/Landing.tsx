@@ -157,7 +157,7 @@ export async function Landing({ lang }: { lang: Lang }) {
   // Mijozlar yillar bo'yicha (yangi yil birinchi)
   const clientGroups = [...new Set(clients.map((cl) => cl.year))].map((year) => ({
     year,
-    names: clients.filter((cl) => cl.year === year).map((cl) => cl.name),
+    items: clients.filter((cl) => cl.year === year).map((cl) => ({ name: cl.name, category: cl.category })),
   }));
   const phoneHref = `tel:${(c.contact_phone ?? "").replace(/[^\d+]/g, "")}`;
   const tgHref = telegramHref(c.contact_telegram);
@@ -426,7 +426,19 @@ export async function Landing({ lang }: { lang: Lang }) {
                 </div>
                 {c.clients_text && <p className="text-lg leading-8 text-text/80">{c.clients_text}</p>}
               </div>
-              <ClientsTabs groups={clientGroups} yearLabel={t.clients_years} />
+              <ClientsTabs
+                groups={clientGroups}
+                lang={lang}
+                labels={{
+                  years: t.clients_years,
+                  all: t.clients_all,
+                  search: t.clients_search,
+                  more: t.clients_more,
+                  less: t.clients_less,
+                  none: t.clients_none,
+                  total: t.clients_total,
+                }}
+              />
             </div>
           </section>
         )}

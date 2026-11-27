@@ -1,5 +1,7 @@
 import "server-only";
 import type { PoolClient } from "pg";
+import { CLIENTS_2026 } from "./client-seed-2026";
+import { clientKey, parseClientLine } from "./clients";
 import { CONTENT_FIELDS } from "./content-fields";
 
 // Bir martalik ma'lumot yangilanishlari. Har biri bazada "migrations" jadvaliga yoziladi
@@ -76,9 +78,31 @@ const faqDocs2026_11 = (client: PoolClient) =>
     },
   });
 
+// 2026-noyabr: 2026-yil mijozlari (Excel'dan). Shu yilda mijoz allaqachon bo'lsa, takrorlar o'tkazib yuboriladi.
+async function clients2026(client: PoolClient) {
+  const existing = await client.query<{ name: string }>("SELECT name FROM clients WHERE year = 2026");
+  const seen = new Set(existing.rows.map((r) => clientKey(r.name)));
+  const names: string[] = [];
+  const cats: string[] = [];
+  for (const line of CLIENTS_2026) {
+    const p = parseClientLine(line);
+    if (!p || seen.has(clientKey(p.name))) continue;
+    seen.add(clientKey(p.name));
+    names.push(p.name);
+    cats.push(p.category);
+  }
+  if (!names.length) return;
+  await client.query(
+    `INSERT INTO clients (name, year, sort, category)
+     SELECT n, 2026, s, c FROM unnest($1::text[], $2::int[], $3::text[]) AS t(n, s, c)`,
+    [names, names.map((_, i) => (i + 1) * 10), cats],
+  );
+}
+
 const MIGRATIONS: { id: string; run: (c: PoolClient) => Promise<void> }[] = [
   { id: "2026-11-redesign-texts", run: texts2026_11 },
   { id: "2026-11-faq-documents", run: faqDocs2026_11 },
+  { id: "2026-11-clients-2026", run: clients2026 },
 ];
 
 export async function runMigrations(client: PoolClient) {

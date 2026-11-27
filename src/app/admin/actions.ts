@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createSession, destroySession, passwordMatches, requireAdmin } from "@/lib/auth";
+import { clientKey, parseClientLine } from "@/lib/clients";
 import { CONTENT_FIELDS } from "@/lib/content-fields";
 import { query } from "@/lib/db";
 import { STATUSES, type Status } from "@/lib/data";
@@ -112,37 +113,48 @@ export async function deleteService(id: number) {
 
 export type ClientsState = { ok?: boolean; added?: number; skipped?: number; error?: string };
 
-/** Bir yo'la ko'p mijoz qo'shish: har qatorda bitta nom (Excel ustunini nusxalab qo'yish mumkin) */
+/**
+ * Bir yo'la ko'p mijoz qo'shish. Excel'dan "Nomi" va "Faoliyat turi" ustunlarini (№ ustuni bilan ham bo'ladi)
+ * nusxalab qo'yish mumkin: soha faoliyat turidan avtomatik aniqlanadi, nomlar bir xil ko'rinishga keltiriladi.
+ */
 export async function addClients(_prev: ClientsState, formData: FormData): Promise<ClientsState> {
   await requireAdmin();
   const year = Number(String(formData.get("year") ?? "").trim());
   if (!Number.isInteger(year) || year < 2000 || year > 2100) return { error: "Yilni to'g'ri kiriting, masalan 2026." };
 
-  // Excel'dan nusxalanganda qatorlar tab bilan bo'linishi mumkin — faqat birinchi ustun olinadi
-  const names = String(formData.get("names") ?? "")
+  const parsed = String(formData.get("names") ?? "")
     .split(/\r?\n/)
-    .map((l) => l.split("\t")[0].replace(/\s+/g, " ").trim().slice(0, 200))
-    .filter(Boolean);
-  if (names.length === 0) return { error: "Kamida bitta mijoz nomini kiriting." };
+    .map(parseClientLine)
+    .filter((x): x is NonNullable<typeof x> => x !== null);
+  if (parsed.length === 0) return { error: "Kamida bitta mijoz nomini kiriting." };
 
   const existing = await query<{ name: string }>("SELECT name FROM clients WHERE year = $1", [year]);
-  const seen = new Set(existing.map((r) => r.name.toLowerCase()));
+  const seen = new Set(existing.map((r) => clientKey(r.name)));
   const sortStart = (await query<{ m: number }>("SELECT COALESCE(MAX(sort), 0)::int AS m FROM clients WHERE year = $1", [year]))[0].m;
 
-  let added = 0;
+  const names: string[] = [];
+  const cats: string[] = [];
   let skipped = 0;
-  for (const name of names) {
-    const key = name.toLowerCase();
+  for (const p of parsed) {
+    const key = clientKey(p.name);
     if (seen.has(key)) {
       skipped++;
       continue;
     }
     seen.add(key);
-    added++;
-    await query("INSERT INTO clients (name, year, sort) VALUES ($1, $2, $3)", [name, year, sortStart + added * 10]);
+    names.push(p.name);
+    cats.push(p.category);
+  }
+  if (names.length) {
+    const sorts = names.map((_, i) => sortStart + (i + 1) * 10);
+    await query(
+      `INSERT INTO clients (name, year, sort, category)
+       SELECT n, $2, s, c FROM unnest($1::text[], $3::int[], $4::text[]) AS t(n, s, c)`,
+      [names, year, sorts, cats],
+    );
   }
   refreshAll();
-  return { ok: true, added, skipped };
+  return { ok: true, added: names.length, skipped };
 }
 
 export async function setClientActive(id: number, active: boolean) {

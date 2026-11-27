@@ -82,6 +82,7 @@ CREATE TABLE IF NOT EXISTS clients (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS clients_year_idx ON clients (year DESC, sort, id);
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT '';
 -- Bir martalik ma'lumot yangilanishlari (migrations.ts)
 CREATE TABLE IF NOT EXISTS migrations (
   id TEXT PRIMARY KEY,
