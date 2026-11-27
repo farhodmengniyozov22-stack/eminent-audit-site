@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getClients, getContent, getServices } from "@/lib/data";
 import { LANG_PATH, getDict, pick, type Lang } from "@/lib/i18n";
+import { SITE_URL } from "@/lib/site";
 import { ApplicationForm, PickServiceButton } from "./ApplicationForm";
 import { ClientsTabs } from "./ClientsTabs";
 import { LangSwitcher } from "./LangSwitcher";
@@ -193,7 +194,31 @@ export async function Landing({ lang }: { lang: Lang }) {
   const tgHref = telegramHref(c.contact_telegram);
   const igHref = instagramHref(c.contact_instagram);
   const year = new Date().getFullYear();
-  const steps = [1, 2, 3, 4].map((n) => ({ title: c[`step_${n}_title`], text: c[`step_${n}_text`] }));
+  // Google uchun: firma haqida tuzilgan ma'lumot (manzil, telefon, ish vaqti, ijtimoiy tarmoqlar)
+  const orgJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "AccountingService",
+    "@id": `${SITE_URL}/#firm`,
+    name: "Eminent Audit",
+    legalName: "«EMINENTAUDIT» MChJ",
+    url: `${SITE_URL}${LANG_PATH[lang] === "/" ? "/" : LANG_PATH[lang]}`,
+    logo: `${SITE_URL}/icon.svg`,
+    image: `${SITE_URL}${(c.team_1_photo ?? "").trim() || "/icon.svg"}`,
+    description: c.hero_text,
+    telephone: (c.contact_phone ?? "").replace(/[^\d+]/g, "") || undefined,
+    email: c.contact_email || undefined,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: c.contact_address,
+      addressLocality: lang === "ru" ? "Ташкент" : "Tashkent",
+      addressCountry: "UZ",
+    },
+    areaServed: { "@type": "Country", name: "Uzbekistan" },
+    openingHours: "Mo-Sa 09:00-18:00",
+    knowsAbout: ["Audit", "Statutory audit", "Accounting", "Bookkeeping", "Tax consulting"],
+    sameAs: [tgHref, igHref].filter(Boolean),
+  };
+  const steps =[1, 2, 3, 4].map((n) => ({ title: c[`step_${n}_title`], text: c[`step_${n}_text`] }));
   const stats = [1, 2, 3, 4]
     .map((n) => ({ value: c[`stat_${n}_value`], label: c[`stat_${n}_label`] }))
     .filter((s) => s.value);
@@ -270,6 +295,10 @@ export async function Landing({ lang }: { lang: Lang }) {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd).replace(/</g, "\\u003c") }}
+      />
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-sheet focus:px-4 focus:py-2"
